@@ -17,7 +17,7 @@ func GetFile(filepath string) (*os.File, error) {
 }
 
 func SafeReadTomlFile(filename string, v interface{}) error {
-	fileLock := MakeFileMutex(filename + ".lock")
+	fileLock := MakeFileMutex(filename)
 	fileLock.Lock()
 	defer fileLock.Unlock()
 	_, err := toml.Decode(filename, v)
@@ -25,10 +25,10 @@ func SafeReadTomlFile(filename string, v interface{}) error {
 }
 
 func SafeWriteTomlFile(v interface{}, filename string) error {
-	fileLock := MakeFileMutex(filename + ".lock")
+	fileLock := MakeFileMutex(filename)
 	fileLock.Lock()
 	defer fileLock.Unlock()
-	f, err := os.OpenFile(filename, os.O_WRONLY | os.O_CREATE | os.O_TRUNC, 0777)
+	f, err := os.OpenFile(filename, os.O_WRONLY | os.O_CREATE, 0777)
 	defer f.Close()
 	if err != nil {
 		return err
@@ -36,7 +36,6 @@ func SafeWriteTomlFile(v interface{}, filename string) error {
 	encoder := toml.NewEncoder(f)
 	return encoder.Encode(v)
 }
-
 
 func DeleteFile(filepath string) bool {
 	_, err := os.Stat(filepath)

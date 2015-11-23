@@ -3,19 +3,19 @@ package utils
 import "sync"
 import "os"
 import "syscall"
-import "fmt"
 
 type FileMutex struct {
-	mutex sync.Mutex
+	mutex *sync.Mutex
 	file *os.File
 }
 
 func MakeFileMutex(filename string) *FileMutex {
-	file, err := os.Open(filename)
+	file, err := os.OpenFile(filename, os.O_RDONLY | os.O_CREATE, 0777)
 	if err != nil {
-		return nil
+		return &FileMutex{file: nil}
 	}
-	return &FileMutex{file: file}
+	mutex := &sync.Mutex{}
+	return &FileMutex{file: file, mutex: mutex}
 }
 
 func (fMutex *FileMutex) Lock() {
