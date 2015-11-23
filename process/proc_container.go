@@ -58,7 +58,7 @@ func (proc *Proc) Start() error {
 // Will forcefully kill the process
 func (proc *Proc) ForceStop() error {
 	if proc.process != nil {
-		err := proc.process.Kill()
+		err := proc.process.Signal(syscall.SIGKILL)
 		proc.status.SetStatus("stopped")
 		proc.release()
 		return err
@@ -77,11 +77,22 @@ func (proc *Proc) GracefullyStop() error {
 	return errors.New("Process does not exist.")
 }
 
+func (proc *Proc) Restart() error {
+	if proc.IsAlive() {
+		err := proc.GracefullyStop()
+		if err != nil {
+			return err
+		}
+	}
+	return proc.Start()
+}
 
-// Find process by PID
-func (proc *Proc) FindProcess(pid int) (*os.Process, error) {
-	process, err := os.FindProcess(pid)
-	return process, err
+func (proc *Proc) IsAlive() bool {
+	return proc.process.Signal(syscall.Signal(0)) == nil
+}
+
+func (proc *Proc) Watch() (*os.ProcessState, error) {
+	return proc.process.Wait()
 }
 
 // Will release the process and remove its PID file
