@@ -1,0 +1,8 @@
+SysFolder = "/Users/mdantas/testaAPM"
+PidFile = ""
+OutFile = ""
+ErrFile = ""
+
+[Watcher]
+
+[Procs]

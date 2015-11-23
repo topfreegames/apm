@@ -16,12 +16,12 @@ type Proc struct {
 	Outfile string
 	Errfile string
 	KeepAlive bool
-	status *ProcStatus
+	Pid int
+	Status *ProcStatus
 	process *os.Process
 }
 
 func (proc *Proc) Start() error {
-	proc.status = &ProcStatus{}
 	outFile, err := utils.GetFile(proc.Outfile)
 	if err != nil {
 		return err
@@ -46,12 +46,13 @@ func (proc *Proc) Start() error {
 		return err
 	}
 	proc.process = process
+	proc.Pid = proc.process.Pid
 	err = utils.WriteFile(proc.Pidfile, []byte(strconv.Itoa(proc.process.Pid)))
 	if err != nil {
 		return err
 	}
 
-	proc.status.SetStatus("started")
+	proc.Status.SetStatus("started")
 	return nil
 }
 
@@ -59,7 +60,7 @@ func (proc *Proc) Start() error {
 func (proc *Proc) ForceStop() error {
 	if proc.process != nil {
 		err := proc.process.Signal(syscall.SIGKILL)
-		proc.status.SetStatus("stopped")
+		proc.Status.SetStatus("stopped")
 		proc.release()
 		return err
 	}
@@ -71,7 +72,7 @@ func (proc *Proc) ForceStop() error {
 func (proc *Proc) GracefullyStop() error {
 	if proc.process != nil {
 		err := proc.process.Signal(syscall.SIGTERM)
-		proc.status.SetStatus("asked to stop")
+		proc.Status.SetStatus("asked to stop")
 		return err
 	}
 	return errors.New("Process does not exist.")
@@ -88,7 +89,11 @@ func (proc *Proc) Restart() error {
 }
 
 func (proc *Proc) IsAlive() bool {
-	return proc.process.Signal(syscall.Signal(0)) == nil
+	p, err := os.FindProcess(proc.Pid)
+	if err != nil {
+		return false
+	}
+	return p.Signal(syscall.Signal(0)) == nil
 }
 
 func (proc *Proc) Watch() (*os.ProcessState, error) {
