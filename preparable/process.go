@@ -44,7 +44,9 @@ func (proc_preparable *ProcPreparable) Start() (*process.Proc, error) {
 		Outfile: proc_preparable.getOutPath(),
 		Errfile: proc_preparable.getErrPath(),
 		KeepAlive: proc_preparable.KeepAlive,
+		Status: &process.ProcStatus{},
 	}
+	
 	err := proc.Start()
 	return proc, err
 }

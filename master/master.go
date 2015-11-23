@@ -4,6 +4,8 @@ import "path"
 import "errors"
 import "sync"
 
+import "time"
+
 import "github.com/topfreegames/apm/preparable"
 import "github.com/topfreegames/apm/process"
 import "github.com/topfreegames/apm/utils"
@@ -31,19 +33,29 @@ func InitMaster(configFile string) *Master {
 	}
 	master.Watcher = watcher
 	go master.WatchProcs()
+	go master.SaveProcs()
+	go master.UpdateStatus()
 	return master
 }
 
 func (master *Master) WatchProcs() {
 	for proc := range master.Watcher.RestartProc() {
+		if !proc.KeepAlive {
+			master.updateStatus(proc)
+			log.Infof("Proc %s does not have keep alive set. Will not be restarted.", proc.Name)
+			continue
+		}
 		log.Infof("Restarting proc %s.", proc.Name)
 		if proc.IsAlive() {
 			log.Warnf("Proc %s was supposed to be dead, but it is alive.", proc.Name)			
 		}
 		master.Lock()
+		proc.Status.AddRestart()
 		err := master.restart(proc)
 		master.Unlock()
-		log.Warnf("Could not restart process %s due to %s.", proc.Name, err)
+		if err != nil {
+			log.Warnf("Could not restart process %s due to %s.", proc.Name, err)
+		}
 	}
 }
 
@@ -76,7 +88,18 @@ func (master *Master) RunPreparable(procPreparable *preparable.ProcPreparable) e
 	master.Procs[proc.Name] = proc
 	master.saveProcs()
 	master.Watcher.AddProcWatcher(proc)
+	proc.Status.SetStatus("running")
 	return nil
+}
+
+func (master *Master) ListProcs() []*process.Proc {
+	master.Lock()
+	defer master.Unlock()
+	procsList := []*process.Proc{}
+	for _, v := range master.Procs {
+		procsList = append(procsList, v)
+	}
+	return procsList
 }
 
 func (master *Master) StartProcess(name string) error {
@@ -105,6 +128,7 @@ func (master *Master) start(proc *process.Proc) error {
 			return err
 		}
 		master.Watcher.AddProcWatcher(proc)
+		proc.Status.SetStatus("running")
 	}
 	return nil
 }
@@ -119,10 +143,32 @@ func (master *Master) stop(proc *process.Proc) error {
 		}
 		if waitStop != nil {
 			<- waitStop
+			proc.Pid = -1
+			proc.Status.SetStatus("stopped")
 		}
 		log.Infof("Proc %s sucessfully stopped.", proc.Name)
 	}
 	return nil
+}
+
+func (master *Master) UpdateStatus() {
+	for {
+		procs := master.ListProcs()
+		for id := range procs {
+			proc := procs[id]
+			master.updateStatus(proc)
+		}
+		time.Sleep(30 * time.Second)
+	}
+}
+
+func (master *Master) updateStatus(proc *process.Proc) {
+	if proc.IsAlive() {
+		proc.Status.SetStatus("running")		
+	} else {
+		proc.Pid = -1
+		proc.Status.SetStatus("stopped")
+	}
 }
 
 // NOT thread safe method. Lock should be acquire before calling it.
@@ -132,6 +178,15 @@ func (master *Master) restart(proc *process.Proc) error {
 		return err
 	}
 	return master.start(proc)
+}
+
+func (master *Master) SaveProcs() {
+	for {
+		master.Lock()
+		master.saveProcs()
+		master.Unlock()
+		time.Sleep(1 * time.Minute)
+	}
 }
 
 // NOT thread safe method. Lock should be acquire before calling it.

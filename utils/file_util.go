@@ -20,7 +20,7 @@ func SafeReadTomlFile(filename string, v interface{}) error {
 	fileLock := MakeFileMutex(filename)
 	fileLock.Lock()
 	defer fileLock.Unlock()
-	_, err := toml.Decode(filename, v)
+	_, err := toml.DecodeFile(filename, v)
 	return err
 }
 

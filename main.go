@@ -1,33 +1,50 @@
 package main
 
-import "time"
-
+import "gopkg.in/alecthomas/kingpin.v2"
+import "github.com/topfreegames/apm/cli"
 import "github.com/topfreegames/apm/master"
-import "github.com/topfreegames/apm/process"
-import "github.com/topfreegames/apm/watcher"
+
+import "os"
+
+var (
+	app = kingpin.New("apm", "Aguia Process Manager.")
+	dns = app.Flag("dns", "TCP Dns host.").Default(":9876").String()
+	timeout = app.Flag("timeout", "Timeout to connect to client").Default("30s").Duration()
+
+	serve = app.Command("serve", "Create APM server instance.")
+	serveConfigFile = serve.Flag("config-file", "Config file location").Required().String()
+	
+	bin = app.Command("bin", "Create bin process.")
+	binSourcePath = bin.Flag("source", "Go project source path. (Ex: github.com/topfreegames/apm)").Required().String()
+	binName = bin.Flag("name", "Process name.").Required().String()
+	binKeepAlive = bin.Flag("keep-alive", "Keep process alive forever.").Required().Bool()
+	binArgs = bin.Flag("args", "External args.").Strings()
+
+	start = app.Command("start", "Start a process.")
+	startName = start.Flag("name", "Process name.").Required().String()
+
+	stop = app.Command("stop", "Stop a process.")
+	stopName = stop.Flag("name", "Process name.").Required().String()
+
+	status = app.Command("status", "Get APM status.")
+)
+	
 
 func main() {
-	master := &master.Master {
-		SysFolder: "/Users/mdantas/testaAPM",
-		Procs: make(map[string]*process.Proc),
-		Watcher: watcher.InitWatcher(),
+	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
+	case serve.FullCommand():
+		master.StartRemoteMasterServer(*dns, *serveConfigFile)
+	case bin.FullCommand():
+		cli := cli.InitCli(*dns, *timeout)
+		cli.StartGoBin(*binSourcePath, *binName, *binKeepAlive, *binArgs)
+	case start.FullCommand():
+		cli := cli.InitCli(*dns, *timeout)
+		cli.StartProcess(*startName)
+	case stop.FullCommand():
+		cli := cli.InitCli(*dns, *timeout)
+		cli.StopProcess(*stopName)
+	case status.FullCommand():
+		cli := cli.InitCli(*dns, *timeout)
+		cli.Status()
 	}
-	go master.WatchProcs()
-	args := []string{"--prod", "--debug", "aguia_instance", "--app_name=colorfy", "--config_file=/Users/mdantas/go/src/git.topfreegames.com/topfreegames/aguia/lib/config.json", "--replicas=5"}
-	preparable, err := master.Prepare(
-		"git.topfreegames.com/topfreegames/aguia/lib",
-		"colorfy",
-		"go",
-		true,
-		args)
-	if err != nil {
-		panic(err)
-	}
-	err = master.RunPreparable(preparable)
-	if err != nil {
-		panic(err)
-	}
-	time.Sleep(60 * time.Second)
-	master.StopProcess("colorfy")
-	for{}
 }
