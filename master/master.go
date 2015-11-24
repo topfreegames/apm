@@ -32,6 +32,8 @@ func InitMaster(configFile string) *Master {
 		panic(err)
 	}
 	master.Watcher = watcher
+	master.Revive()
+	log.Infof("All procs revived...")
 	go master.WatchProcs()
 	go master.SaveProcs()
 	go master.UpdateStatus()
@@ -41,7 +43,9 @@ func InitMaster(configFile string) *Master {
 func (master *Master) WatchProcs() {
 	for proc := range master.Watcher.RestartProc() {
 		if !proc.KeepAlive {
+			master.Lock()
 			master.updateStatus(proc)
+			master.Unlock()
 			log.Infof("Proc %s does not have keep alive set. Will not be restarted.", proc.Name)
 			continue
 		}
@@ -93,8 +97,6 @@ func (master *Master) RunPreparable(procPreparable *preparable.ProcPreparable) e
 }
 
 func (master *Master) ListProcs() []*process.Proc {
-	master.Lock()
-	defer master.Unlock()
 	procsList := []*process.Proc{}
 	for _, v := range master.Procs {
 		procsList = append(procsList, v)
@@ -120,6 +122,44 @@ func (master *Master) StopProcess(name string) error {
 	return errors.New("Unknown process.")
 }
 
+func (master *Master) DeleteProcess(name string) error {
+	master.Lock()
+	defer master.Unlock()
+	log.Infof("Trying to delete proc %s", name)
+	if proc, ok := master.Procs[name]; ok {
+		err := master.stop(proc)
+		if err != nil {
+			return err
+		}
+		delete(master.Procs, name)
+		err = master.delete(proc)
+		if err != nil {
+			return err
+		}
+		log.Infof("Successfully deleted proc %s", name)
+	}
+	return nil
+}
+
+func (master *Master) Revive() {
+	master.Lock()
+	defer master.Unlock()
+	procs := master.ListProcs()
+	log.Info("Reviving all processes")
+	for id := range procs {
+		proc := procs[id]
+		if !proc.KeepAlive {
+			log.Infof("Proc %s does not have KeepAlive set. Will not revive it.", proc.Name)
+			continue
+		}
+		log.Infof("Reviving proc %s", proc.Name)
+		err := master.start(proc)
+		if err != nil {
+			log.Infof("Failed to revive proc %s due to %s", proc.Name, err)
+		}
+	}
+}
+
 // NOT thread safe method. Lock should be acquire before calling it.
 func (master *Master) start(proc *process.Proc) error {
 	if !proc.IsAlive() {
@@ -131,6 +171,10 @@ func (master *Master) start(proc *process.Proc) error {
 		proc.Status.SetStatus("running")
 	}
 	return nil
+}
+
+func (master *Master) delete(proc *process.Proc) error {
+	return proc.Delete()
 }
 
 // NOT thread safe method. Lock should be acquire before calling it.
@@ -153,11 +197,13 @@ func (master *Master) stop(proc *process.Proc) error {
 
 func (master *Master) UpdateStatus() {
 	for {
+		master.Lock()
 		procs := master.ListProcs()
 		for id := range procs {
 			proc := procs[id]
 			master.updateStatus(proc)
 		}
+		master.Unlock()
 		time.Sleep(30 * time.Second)
 	}
 }
@@ -182,10 +228,11 @@ func (master *Master) restart(proc *process.Proc) error {
 
 func (master *Master) SaveProcs() {
 	for {
+		log.Infof("Saving list of procs.")
 		master.Lock()
 		master.saveProcs()
 		master.Unlock()
-		time.Sleep(1 * time.Minute)
+		time.Sleep(5 * time.Minute)
 	}
 }
 

@@ -47,6 +47,11 @@ func (remote_master *RemoteMaster) MonitStatus(req string, procs *[]*process.Pro
 	return nil
 }
 
+func (remote_master *RemoteMaster) DeleteProcess(procName string, ack *bool) error {
+	*ack = true
+	return remote_master.master.DeleteProcess(procName)
+}
+
 func StartRemoteMasterServer(dsn string, configFile string) {
 	remoteMaster := &RemoteMaster{
 		master: InitMaster(configFile),
@@ -86,6 +91,11 @@ func (client *RemoteClient) StartProcess(procName string) error {
 func (client *RemoteClient) StopProcess(procName string) error {
 	var stopped bool
 	return client.conn.Call("RemoteMaster.StopProcess", procName, &stopped)
+}
+
+func (client *RemoteClient) DeleteProcess(procName string) error {
+	var deleted bool
+	return client.conn.Call("RemoteMaster.DeleteProcess", procName, &deleted)
 }
 
 func (client *RemoteClient) MonitStatus() ([]*process.Proc, error) {
