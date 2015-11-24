@@ -41,6 +41,14 @@ func (cli *Cli) StopProcess(procName string) {
 	}
 }
 
+func (cli *Cli) DeleteProcess(procName string) {
+	err := cli.remoteClient.DeleteProcess(procName)
+	if err != nil {
+		log.Fatal("Failed to delete process due to: %+v\n", err)
+	}
+}
+
+
 func (cli *Cli) Status() {
 	procs, err := cli.remoteClient.MonitStatus()
 	if err != nil {

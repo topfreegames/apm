@@ -16,16 +16,19 @@ var (
 	
 	bin = app.Command("bin", "Create bin process.")
 	binSourcePath = bin.Flag("source", "Go project source path. (Ex: github.com/topfreegames/apm)").Required().String()
-	binName = bin.Flag("name", "Process name.").Required().String()
+	binName = bin.Arg("name", "Process name.").Required().String()
 	binKeepAlive = bin.Flag("keep-alive", "Keep process alive forever.").Required().Bool()
 	binArgs = bin.Flag("args", "External args.").Strings()
 
 	start = app.Command("start", "Start a process.")
-	startName = start.Flag("name", "Process name.").Required().String()
+	startName = start.Arg("name", "Process name.").Required().String()
 
 	stop = app.Command("stop", "Stop a process.")
-	stopName = stop.Flag("name", "Process name.").Required().String()
+	stopName = stop.Arg("name", "Process name.").Required().String()
 
+	delete = app.Command("delete", "Delete a process.")
+	deleteName = delete.Arg("name", "Process name.").Required().String()
+	
 	status = app.Command("status", "Get APM status.")
 )
 	
@@ -43,6 +46,9 @@ func main() {
 	case stop.FullCommand():
 		cli := cli.InitCli(*dns, *timeout)
 		cli.StopProcess(*stopName)
+	case delete.FullCommand():
+		cli := cli.InitCli(*dns, *timeout)
+		cli.DeleteProcess(*deleteName)
 	case status.FullCommand():
 		cli := cli.InitCli(*dns, *timeout)
 		cli.Status()

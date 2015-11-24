@@ -88,6 +88,19 @@ func (proc *Proc) Restart() error {
 	return proc.Start()
 }
 
+func (proc *Proc) Delete() error {
+	proc.release()
+	err := utils.DeleteFile(proc.Outfile)
+	if err != nil {
+		return err
+	}
+	err = utils.DeleteFile(proc.Errfile)
+	if err != nil {
+		return err
+	}
+	return os.RemoveAll(proc.Path)
+}
+
 func (proc *Proc) IsAlive() bool {
 	p, err := os.FindProcess(proc.Pid)
 	if err != nil {
