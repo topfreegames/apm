@@ -4,7 +4,15 @@ import "gopkg.in/alecthomas/kingpin.v2"
 import "github.com/topfreegames/apm/cli"
 import "github.com/topfreegames/apm/master"
 
+import "github.com/sevlyar/go-daemon"
+
+import "path"
+import "path/filepath"
+import "syscall"
 import "os"
+import "os/signal"
+
+import log "github.com/Sirupsen/logrus"
 
 var (
 	app = kingpin.New("apm", "Aguia Process Manager.")
@@ -36,7 +44,7 @@ var (
 func main() {
 	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
 	case serve.FullCommand():
-		master.StartRemoteMasterServer(*dns, *serveConfigFile)
+		startRemoteMasterServer()
 	case bin.FullCommand():
 		cli := cli.InitCli(*dns, *timeout)
 		cli.StartGoBin(*binSourcePath, *binName, *binKeepAlive, *binArgs)
@@ -53,4 +61,59 @@ func main() {
 		cli := cli.InitCli(*dns, *timeout)
 		cli.Status()
 	}
+}
+
+func isDaemonRunning(ctx *daemon.Context) (bool, *os.Process, error) {
+	d, err := ctx.Search()
+
+	if err != nil {
+		return false, d, err
+	}
+
+	if err := d.Signal(syscall.Signal(0)); err != nil {
+		return false, d, err
+	}
+
+	return true, d, nil
+}
+
+func startRemoteMasterServer() {
+	ctx := &daemon.Context {
+		PidFileName: path.Join(filepath.Dir(*serveConfigFile), "main.pid"),
+		PidFilePerm: 0644,
+		LogFileName: path.Join(filepath.Dir(*serveConfigFile), "main.log"),
+		LogFilePerm: 0640,
+		WorkDir: "./",
+		Umask: 027,
+	}
+	if ok, _, _ := isDaemonRunning(ctx); ok {
+		log.Info("Server is already running.")
+		return
+	}
+
+	log.Info("Starting daemon...")
+	d, err := ctx.Reborn()
+	if err != nil {
+		log.Fatalf("Failed to reborn daemon due to %+v.", err)
+	}
+
+	if d != nil {
+		return
+	}
+
+	defer ctx.Release()
+
+	go func() {
+		log.Info("Starting remote master server...")
+		master.StartRemoteMasterServer(*dns, *serveConfigFile)
+	}()
+
+	sigsKill := make(chan os.Signal, 1)
+	signal.Notify(sigsKill,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT)
+
+	<- sigsKill
+	os.Exit(0)
 }

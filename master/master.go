@@ -27,6 +27,7 @@ type Master struct {
 func InitMaster(configFile string) *Master {
 	watcher := watcher.InitWatcher()
 	master := &Master{}
+	master.Procs = make(map[string]*process.Proc)
 	err := utils.SafeReadTomlFile(configFile, master)
 	if err != nil {
 		panic(err)
