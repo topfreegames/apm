@@ -1,8 +1,8 @@
 package main
 
 import "gopkg.in/alecthomas/kingpin.v2"
-import "github.com/topfreegames/apm/cli"
-import "github.com/topfreegames/apm/master"
+import "github.com/topfreegames/apm/lib/cli"
+import "github.com/topfreegames/apm/lib/master"
 
 import "github.com/sevlyar/go-daemon"
 

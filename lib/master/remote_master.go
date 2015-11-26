@@ -4,8 +4,10 @@ import "net"
 import "net/rpc"
 import "log"
 import "time"
+import "errors"
+import "fmt"
 
-import "github.com/topfreegames/apm/process"
+import "github.com/topfreegames/apm/lib/process"
 
 type RemoteMaster struct {
 	master *Master
@@ -23,10 +25,10 @@ type GoBin struct {
 }
 
 func (remote_master *RemoteMaster) StartGoBin(goBin *GoBin, ack *bool) error {
-	preparable, err := remote_master.master.Prepare(goBin.SourcePath, goBin.Name, "go", goBin.KeepAlive, goBin.Args)
+	preparable, output, err := remote_master.master.Prepare(goBin.SourcePath, goBin.Name, "go", goBin.KeepAlive, goBin.Args)
 	*ack = true
 	if err != nil {
-		return err
+		return errors.New(fmt.Sprintf("ERROR: %s OUTPUT: %s", err, string(output)))
 	}
 	return remote_master.master.RunPreparable(preparable)
 }

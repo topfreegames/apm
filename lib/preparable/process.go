@@ -3,7 +3,7 @@ package preparable
 import "os/exec"
 import "strings"
 
-import "github.com/topfreegames/apm/process"
+import "github.com/topfreegames/apm/lib/process"
 
 type ProcPreparable struct {
 	Name string

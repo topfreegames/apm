@@ -5,7 +5,7 @@ import "syscall"
 import "errors"
 import "strconv"
 
-import "github.com/topfreegames/apm/utils"
+import "github.com/topfreegames/apm/lib/utils"
 
 type Proc struct {
 	Name string

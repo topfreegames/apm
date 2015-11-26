@@ -6,10 +6,10 @@ import "sync"
 
 import "time"
 
-import "github.com/topfreegames/apm/preparable"
-import "github.com/topfreegames/apm/process"
-import "github.com/topfreegames/apm/utils"
-import "github.com/topfreegames/apm/watcher"
+import "github.com/topfreegames/apm/lib/preparable"
+import "github.com/topfreegames/apm/lib/process"
+import "github.com/topfreegames/apm/lib/utils"
+import "github.com/topfreegames/apm/lib/watcher"
 
 import log "github.com/Sirupsen/logrus"
 
@@ -66,7 +66,7 @@ func (master *Master) WatchProcs() {
 
 // It will compile the source code into a binary and return a preparable
 // ready to be executed.
-func (master *Master) Prepare(sourcePath string, name string, language string, keepAlive bool, args []string) (*preparable.ProcPreparable, error) {
+func (master *Master) Prepare(sourcePath string, name string, language string, keepAlive bool, args []string) (*preparable.ProcPreparable, []byte, error) {
 	procPreparable := &preparable.ProcPreparable {
 		Name: name,
 		SourcePath: sourcePath,
@@ -75,8 +75,8 @@ func (master *Master) Prepare(sourcePath string, name string, language string, k
 		KeepAlive: keepAlive,
 		Args: args,
 	}
-	_, err := procPreparable.PrepareBin()
-	return procPreparable, err
+	output, err := procPreparable.PrepareBin()
+	return procPreparable, output, err
 }
 
 func (master *Master) RunPreparable(procPreparable *preparable.ProcPreparable) error {

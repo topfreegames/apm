@@ -1,6 +1,6 @@
 package cli
 
-import "github.com/topfreegames/apm/master"
+import "github.com/topfreegames/apm/lib/master"
 
 import "log"
 import "time"

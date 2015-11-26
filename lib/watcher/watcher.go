@@ -3,7 +3,7 @@ package watcher
 import "os"
 import "sync"
 
-import "github.com/topfreegames/apm/process"
+import "github.com/topfreegames/apm/lib/process"
 import log "github.com/Sirupsen/logrus"
 
 type ProcStatus struct {
