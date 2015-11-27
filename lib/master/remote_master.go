@@ -54,7 +54,11 @@ func (remote_master *RemoteMaster) DeleteProcess(procName string, ack *bool) err
 	return remote_master.master.DeleteProcess(procName)
 }
 
-func StartRemoteMasterServer(dsn string, configFile string) {
+func (remote_master *RemoteMaster) Stop() error {
+	return remote_master.master.Stop()
+}
+
+func StartRemoteMasterServer(dsn string, configFile string) *RemoteMaster {
 	remoteMaster := &RemoteMaster{
 		master: InitMaster(configFile),
 	}
@@ -63,7 +67,8 @@ func StartRemoteMasterServer(dsn string, configFile string) {
 	if e != nil {
 		log.Fatal("listen error: ", e)
 	}
-	rpc.Accept(l)
+	go rpc.Accept(l)
+	return remoteMaster
 }
 
 func StartRemoteClient(dsn string, timeout time.Duration) (*RemoteClient, error) {

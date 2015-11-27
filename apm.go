@@ -19,6 +19,9 @@ var (
 	dns = app.Flag("dns", "TCP Dns host.").Default(":9876").String()
 	timeout = app.Flag("timeout", "Timeout to connect to client").Default("30s").Duration()
 
+	serveStop = app.Command("serve-stop", "Stop APM server instance.")
+	serveStopConfigFile = serveStop.Flag("config-file", "Config file location").Required().String()
+	
 	serve = app.Command("serve", "Create APM server instance.")
 	serveConfigFile = serve.Flag("config-file", "Config file location").Required().String()
 	
@@ -43,6 +46,8 @@ var (
 
 func main() {
 	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
+	case serveStop.FullCommand():
+		stopRemoteMasterServer()
 	case serve.FullCommand():
 		startRemoteMasterServer()
 	case bin.FullCommand():
@@ -102,11 +107,9 @@ func startRemoteMasterServer() {
 	}
 
 	defer ctx.Release()
-
-	go func() {
-		log.Info("Starting remote master server...")
-		master.StartRemoteMasterServer(*dns, *serveConfigFile)
-	}()
+	
+	log.Info("Starting remote master server...")
+	remoteMaster := master.StartRemoteMasterServer(*dns, *serveConfigFile)
 
 	sigsKill := make(chan os.Signal, 1)
 	signal.Notify(sigsKill,
@@ -115,5 +118,30 @@ func startRemoteMasterServer() {
 		syscall.SIGQUIT)
 
 	<- sigsKill
+	log.Info("Received signal to stop...")
+	err = remoteMaster.Stop()
+	if err != nil {
+		log.Fatal(err)
+	}
 	os.Exit(0)
+}
+
+func stopRemoteMasterServer() {	
+	ctx := &daemon.Context {
+		PidFileName: path.Join(filepath.Dir(*serveStopConfigFile), "main.pid"),
+		PidFilePerm: 0644,
+		LogFileName: path.Join(filepath.Dir(*serveStopConfigFile), "main.log"),
+		LogFilePerm: 0640,
+		WorkDir: "./",
+		Umask: 027,
+	}
+	
+	if ok, p, _ := isDaemonRunning(ctx); ok {
+		if err := p.Signal(syscall.Signal(syscall.SIGQUIT)); err != nil {
+			log.Fatal("Failed to kill daemon %v", err)
+		}
+	} else {
+		ctx.Release()
+		log.Info("instance is not running.")
+	}
 }

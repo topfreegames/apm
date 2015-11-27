@@ -237,6 +237,18 @@ func (master *Master) SaveProcs() {
 	}
 }
 
+func (master *Master) Stop() error {
+	log.Info("Stopping APM...")
+	procs := master.ListProcs()
+	for id := range procs {
+		proc := procs[id]
+		log.Info("Stopping proc %s", proc.Name)
+		master.stop(proc)
+	}
+	log.Info("Saving and returning list of procs.")
+	return master.saveProcs()
+}
+
 // NOT thread safe method. Lock should be acquire before calling it.
 func (master *Master) saveProcs() error {
 	configPath := master.getConfigPath()
