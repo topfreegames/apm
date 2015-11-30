@@ -1,8 +1,2 @@
-SysFolder = "/Users/mdantas/testaAPM"
-PidFile = ""
-OutFile = ""
-ErrFile = ""
-
-[Watcher]
-
-[Procs]
+SysFolder = "" # This SysFolder represents where APM will save the process list and other persitent information. Note that this .toml file should be inside this SysFolder.
+# The APM pid File will be inside the SysFolder, and it will be named as "main.pid", the log file will follow the same pattern.
