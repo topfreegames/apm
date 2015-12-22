@@ -1,3 +1,12 @@
+/*
+APM is a lightweight process manager written in Golang for Golang applications. It helps you keep all of your applications alive forever, if you want to. You can also reload, start, stop, delete and query status on the fly.
+
+APM also provide a way to start a process by compiling a Golang project source code.
+
+The main APM module is the Master module, it's the glue that keep everything running as it should be.
+
+If you need to use the remote version of APM, take a look at RemoteMaster on Master package.
+*/
 package main
 
 import "gopkg.in/alecthomas/kingpin.v2"

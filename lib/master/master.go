@@ -1,3 +1,21 @@
+/*
+Master package is the main package that keeps everything running as it should be. It's responsible for starting, stopping and deleting processes. It also will keep an eye on the Watcher in case a process dies so it can restart it again.
+
+RemoteMaster is responsible for exporting the main APM operations as HTTP requests. If you want to start a Remote Server, run:
+
+- remoteServer := master.StartRemoteMasterServer(dsn, configFile)
+
+It will start a remote master and return the instance.
+
+To make remote requests, use the Remote Client by instantiating using:
+
+- remoteClient, err := master.StartRemoteClient(dsn, timeout)
+
+It will start the remote client and return the instance so you can use to initiate requests, such as:
+
+- remoteClient.StartGoBin(sourcePath, name, keepAlive, args)
+*/
+
 package master
 
 import "path"
@@ -17,13 +35,14 @@ import log "github.com/Sirupsen/logrus"
 // the necessary actions to keep the process running as they should be.
 type Master struct {
 	sync.Mutex
-	SysFolder string	
-	PidFile string
-	OutFile string
-	ErrFile string
-	Watcher *watcher.Watcher
+
+	SysFolder       string                    // SysFolder is the main APM folder where the necessary config files will be stored.	        
+	PidFile         string                    // PidFille is the APM pid file path.
+	OutFile         string                    // OutFile is the APM output log file path.
+	ErrFile         string                    // ErrFile is the APM err log file path.
+	Watcher         *watcher.Watcher          // Watcher is a watcher instance.
 	
-	Procs map[string]*process.Proc
+	Procs           map[string]*process.Proc  // Procs is a map containing all procs started on APM.
 }
 
 // InitMaster will start a master instance with configFile.

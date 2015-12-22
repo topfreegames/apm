@@ -20,10 +20,10 @@ type RemoteClient struct {
 
 // GoBin is a struct that represents the necessary arguments for a go binary to be built.
 type GoBin struct {
-	SourcePath string
-	Name string
-	KeepAlive bool
-	Args []string
+	SourcePath string   // SourcePath is the package path. (Ex: github.com/topfreegames/apm)
+	Name       string   // Name is the process name that will be given to the process.
+	KeepAlive  bool     // KeepAlive will determine whether APM should keep the proc live or not.
+	Args       []string // Args is an array containing all the extra args that will be passed to the binary after compilation.
 }
 
 // StartGoBin will build a binary based on the arguments passed on goBin, then it will start the process
