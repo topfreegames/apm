@@ -13,6 +13,8 @@ import "github.com/topfreegames/apm/lib/watcher"
 
 import log "github.com/Sirupsen/logrus"
 
+// Master is the main module that keeps everything in place and execute
+// the necessary actions to keep the process running as they should be.
 type Master struct {
 	sync.Mutex
 	SysFolder string	
@@ -24,6 +26,8 @@ type Master struct {
 	Procs map[string]*process.Proc
 }
 
+// InitMaster will start a master instance with configFile.
+// It returns a Master instance.
 func InitMaster(configFile string) *Master {
 	watcher := watcher.InitWatcher()
 	master := &Master{}
@@ -41,6 +45,7 @@ func InitMaster(configFile string) *Master {
 	return master
 }
 
+// WatchProcs will keep the procs running forever.
 func (master *Master) WatchProcs() {
 	for proc := range master.Watcher.RestartProc() {
 		if !proc.KeepAlive {
@@ -64,7 +69,7 @@ func (master *Master) WatchProcs() {
 	}
 }
 
-// It will compile the source code into a binary and return a preparable
+// Prepare will compile the source code into a binary and return a preparable
 // ready to be executed.
 func (master *Master) Prepare(sourcePath string, name string, language string, keepAlive bool, args []string) (*preparable.ProcPreparable, []byte, error) {
 	procPreparable := &preparable.ProcPreparable {
@@ -79,6 +84,7 @@ func (master *Master) Prepare(sourcePath string, name string, language string, k
 	return procPreparable, output, err
 }
 
+// RunPreparable will run procPreparable and add it to the watch list in case everything goes well.
 func (master *Master) RunPreparable(procPreparable *preparable.ProcPreparable) error {
 	master.Lock()
 	defer master.Unlock()
@@ -97,6 +103,7 @@ func (master *Master) RunPreparable(procPreparable *preparable.ProcPreparable) e
 	return nil
 }
 
+// ListProcs will return a list of all procs.
 func (master *Master) ListProcs() []*process.Proc {
 	procsList := []*process.Proc{}
 	for _, v := range master.Procs {
@@ -105,6 +112,7 @@ func (master *Master) ListProcs() []*process.Proc {
 	return procsList
 }
 
+// StartProcess will a start a process.
 func (master *Master) StartProcess(name string) error {
 	master.Lock()
 	defer master.Unlock()
@@ -114,6 +122,7 @@ func (master *Master) StartProcess(name string) error {
 	return errors.New("Unknown process.")
 }
 
+// StopProcess will stop a process with the given name.
 func (master *Master) StopProcess(name string) error {
 	master.Lock()
 	defer master.Unlock()
@@ -123,6 +132,7 @@ func (master *Master) StopProcess(name string) error {
 	return errors.New("Unknown process.")
 }
 
+// DeleteProcess will delete a process and all its files and childs forever.
 func (master *Master) DeleteProcess(name string) error {
 	master.Lock()
 	defer master.Unlock()
@@ -142,6 +152,8 @@ func (master *Master) DeleteProcess(name string) error {
 	return nil
 }
 
+// Revive will revive all procs listed on ListProcs. This should ONLY be called
+// during Master startup.
 func (master *Master) Revive() {
 	master.Lock()
 	defer master.Unlock()
@@ -196,6 +208,7 @@ func (master *Master) stop(proc *process.Proc) error {
 	return nil
 }
 
+// UpdateStatus will update a process status every 30s.
 func (master *Master) UpdateStatus() {
 	for {
 		master.Lock()
@@ -227,6 +240,7 @@ func (master *Master) restart(proc *process.Proc) error {
 	return master.start(proc)
 }
 
+// SaveProcs will save the list of procs onto the proc file.
 func (master *Master) SaveProcs() {
 	for {
 		log.Infof("Saving list of procs.")
@@ -237,6 +251,7 @@ func (master *Master) SaveProcs() {
 	}
 }
 
+// Stop will stop APM and all of its running procs.
 func (master *Master) Stop() error {
 	log.Info("Stopping APM...")
 	procs := master.ListProcs()

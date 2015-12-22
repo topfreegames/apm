@@ -15,34 +15,33 @@ import "os/signal"
 import log "github.com/Sirupsen/logrus"
 
 var (
-	app = kingpin.New("apm", "Aguia Process Manager.")
-	dns = app.Flag("dns", "TCP Dns host.").Default(":9876").String()
+	app     = kingpin.New("apm", "Aguia Process Manager.")
+	dns     = app.Flag("dns", "TCP Dns host.").Default(":9876").String()
 	timeout = app.Flag("timeout", "Timeout to connect to client").Default("30s").Duration()
 
-	serveStop = app.Command("serve-stop", "Stop APM server instance.")
+	serveStop           = app.Command("serve-stop", "Stop APM server instance.")
 	serveStopConfigFile = serveStop.Flag("config-file", "Config file location").Required().String()
-	
-	serve = app.Command("serve", "Create APM server instance.")
-	serveConfigFile = serve.Flag("config-file", "Config file location").Required().String()
-	
-	bin = app.Command("bin", "Create bin process.")
-	binSourcePath = bin.Flag("source", "Go project source path. (Ex: github.com/topfreegames/apm)").Required().String()
-	binName = bin.Arg("name", "Process name.").Required().String()
-	binKeepAlive = bin.Flag("keep-alive", "Keep process alive forever.").Required().Bool()
-	binArgs = bin.Flag("args", "External args.").Strings()
 
-	start = app.Command("start", "Start a process.")
+	serve           = app.Command("serve", "Create APM server instance.")
+	serveConfigFile = serve.Flag("config-file", "Config file location").Required().String()
+
+	bin           = app.Command("bin", "Create bin process.")
+	binSourcePath = bin.Flag("source", "Go project source path. (Ex: github.com/topfreegames/apm)").Required().String()
+	binName       = bin.Arg("name", "Process name.").Required().String()
+	binKeepAlive  = bin.Flag("keep-alive", "Keep process alive forever.").Required().Bool()
+	binArgs       = bin.Flag("args", "External args.").Strings()
+
+	start     = app.Command("start", "Start a process.")
 	startName = start.Arg("name", "Process name.").Required().String()
 
-	stop = app.Command("stop", "Stop a process.")
+	stop     = app.Command("stop", "Stop a process.")
 	stopName = stop.Arg("name", "Process name.").Required().String()
 
-	delete = app.Command("delete", "Delete a process.")
+	delete     = app.Command("delete", "Delete a process.")
 	deleteName = delete.Arg("name", "Process name.").Required().String()
-	
+
 	status = app.Command("status", "Get APM status.")
 )
-	
 
 func main() {
 	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
@@ -83,13 +82,13 @@ func isDaemonRunning(ctx *daemon.Context) (bool, *os.Process, error) {
 }
 
 func startRemoteMasterServer() {
-	ctx := &daemon.Context {
+	ctx := &daemon.Context{
 		PidFileName: path.Join(filepath.Dir(*serveConfigFile), "main.pid"),
 		PidFilePerm: 0644,
 		LogFileName: path.Join(filepath.Dir(*serveConfigFile), "main.log"),
 		LogFilePerm: 0640,
-		WorkDir: "./",
-		Umask: 027,
+		WorkDir:     "./",
+		Umask:       027,
 	}
 	if ok, _, _ := isDaemonRunning(ctx); ok {
 		log.Info("Server is already running.")
@@ -107,7 +106,7 @@ func startRemoteMasterServer() {
 	}
 
 	defer ctx.Release()
-	
+
 	log.Info("Starting remote master server...")
 	remoteMaster := master.StartRemoteMasterServer(*dns, *serveConfigFile)
 
@@ -117,7 +116,7 @@ func startRemoteMasterServer() {
 		syscall.SIGTERM,
 		syscall.SIGQUIT)
 
-	<- sigsKill
+	<-sigsKill
 	log.Info("Received signal to stop...")
 	err = remoteMaster.Stop()
 	if err != nil {
@@ -126,16 +125,16 @@ func startRemoteMasterServer() {
 	os.Exit(0)
 }
 
-func stopRemoteMasterServer() {	
-	ctx := &daemon.Context {
+func stopRemoteMasterServer() {
+	ctx := &daemon.Context{
 		PidFileName: path.Join(filepath.Dir(*serveStopConfigFile), "main.pid"),
 		PidFilePerm: 0644,
 		LogFileName: path.Join(filepath.Dir(*serveStopConfigFile), "main.log"),
 		LogFilePerm: 0640,
-		WorkDir: "./",
-		Umask: 027,
+		WorkDir:     "./",
+		Umask:       027,
 	}
-	
+
 	if ok, p, _ := isDaemonRunning(ctx); ok {
 		if err := p.Signal(syscall.Signal(syscall.SIGQUIT)); err != nil {
 			log.Fatal("Failed to kill daemon %v", err)
