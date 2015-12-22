@@ -6,6 +6,20 @@ APM also provide a way to start a process by compiling a Golang project source c
 The main APM module is the Master module, it's the glue that keep everything running as it should be.
 
 If you need to use the remote version of APM, take a look at RemoteMaster on Master package.
+
+To use the remote version of APM, use:
+
+- remoteServer := master.StartRemoteMasterServer(dsn, configFile)
+
+It will start a remote master and return the instance.
+
+To make remote requests, use the Remote Client by instantiating using:
+
+- remoteClient, err := master.StartRemoteClient(dsn, timeout)
+
+It will start the remote client and return the instance so you can use to initiate requests, such as:
+
+- remoteClient.StartGoBin(sourcePath, name, keepAlive, args)
 */
 package main
 
