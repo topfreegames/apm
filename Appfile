@@ -1,0 +1,18 @@
+application {
+  name = "apm"
+  type = "go"
+}
+
+project {
+  name = "aguia"
+  infrastructure = "aguia-workers"
+}
+
+infrastructure "aguia-workers" {
+  type = "aws"
+  flavor = "simple"
+}
+
+customization "go" {
+  go_version = "1.5.1"
+}

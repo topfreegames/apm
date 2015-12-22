@@ -1,0 +1,97 @@
+{
+    "File": {
+        "ID": "d2f351d5-e78e-b4b9-1769-e892a5c21caf",
+        "Path": "/Users/mauriciobanduk/go/src/github.com/topfreegames/apm/Appfile",
+        "Source": "",
+        "Application": {
+            "Name": "apm",
+            "Type": "go",
+            "Dependencies": null
+        },
+        "Project": {
+            "Name": "aguia",
+            "Infrastructure": "aguia-workers"
+        },
+        "Infrastructure": [
+            {
+                "Name": "apm",
+                "Type": "aws",
+                "Flavor": "simple",
+                "Foundations": [
+                    {
+                        "Name": "consul",
+                        "Config": null
+                    }
+                ]
+            },
+            {
+                "Name": "aguia-workers",
+                "Type": "aws",
+                "Flavor": "simple",
+                "Foundations": null
+            }
+        ],
+        "Customization": {
+            "Raw": [
+                {
+                    "Type": "go",
+                    "Config": {
+                        "go_version": "1.5.1"
+                    }
+                }
+            ]
+        },
+        "Imports": null
+    },
+    "Vertices": [
+        {
+            "File": {
+                "ID": "d2f351d5-e78e-b4b9-1769-e892a5c21caf",
+                "Path": "/Users/mauriciobanduk/go/src/github.com/topfreegames/apm/Appfile",
+                "Source": "",
+                "Application": {
+                    "Name": "apm",
+                    "Type": "go",
+                    "Dependencies": null
+                },
+                "Project": {
+                    "Name": "aguia",
+                    "Infrastructure": "aguia-workers"
+                },
+                "Infrastructure": [
+                    {
+                        "Name": "apm",
+                        "Type": "aws",
+                        "Flavor": "simple",
+                        "Foundations": [
+                            {
+                                "Name": "consul",
+                                "Config": null
+                            }
+                        ]
+                    },
+                    {
+                        "Name": "aguia-workers",
+                        "Type": "aws",
+                        "Flavor": "simple",
+                        "Foundations": null
+                    }
+                ],
+                "Customization": {
+                    "Raw": [
+                        {
+                            "Type": "go",
+                            "Config": {
+                                "go_version": "1.5.1"
+                            }
+                        }
+                    ]
+                },
+                "Imports": null
+            },
+            "Dir": "",
+            "NameValue": "apm"
+        }
+    ],
+    "Edges": []
+}
