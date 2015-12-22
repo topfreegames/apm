@@ -7,7 +7,7 @@
      <br/><br/>
 </div>
 # APM - Aguia Process Manager
-APM is a process manager for Golang applications. It helps you keep your applications alive forever, to reload and start them from the source code.
+APM is a lightweight process manager written in Golang for Golang applications. It helps you keep your applications alive forever, to reload and start them from the source code.
 
 Starting an application is easy:
 ```bash
