@@ -6,10 +6,13 @@ import "log"
 import "time"
 import "fmt"
 
+// Cli is the command line client.
 type Cli struct {
 	remoteClient *master.RemoteClient
 }
 
+// InitCli initiates a remote client connecting to dsn.
+// Returns a Cli instance.
 func InitCli(dsn string, timeout time.Duration) *Cli {
 	client, err := master.StartRemoteClient(dsn, timeout)
 	if err != nil {
@@ -20,6 +23,8 @@ func InitCli(dsn string, timeout time.Duration) *Cli {
 	}
 }
 
+// StartGoBin will try to start a go binary process.
+// Returns a fatal error in case there's any.
 func (cli *Cli) StartGoBin(sourcePath string, name string, keepAlive bool, args []string) {
 	err := cli.remoteClient.StartGoBin(sourcePath, name, keepAlive, args)
 	if err != nil {
@@ -27,6 +32,8 @@ func (cli *Cli) StartGoBin(sourcePath string, name string, keepAlive bool, args 
 	}
 }
 
+// StartProcess will try to start a process with procName. Note that this process
+// must have been already started through StartGoBin.
 func (cli *Cli) StartProcess(procName string) {
 	err := cli.remoteClient.StartProcess(procName)
 	if err != nil {
@@ -34,6 +41,7 @@ func (cli *Cli) StartProcess(procName string) {
 	}
 }
 
+// StopProcess will try to stop a process named procName.
 func (cli *Cli) StopProcess(procName string) {
 	err := cli.remoteClient.StopProcess(procName)
 	if err != nil {
@@ -41,6 +49,7 @@ func (cli *Cli) StopProcess(procName string) {
 	}
 }
 
+// DeleteProcess will stop and delete all dependencies from process procName forever.
 func (cli *Cli) DeleteProcess(procName string) {
 	err := cli.remoteClient.DeleteProcess(procName)
 	if err != nil {
@@ -48,6 +57,7 @@ func (cli *Cli) DeleteProcess(procName string) {
 	}
 }
 
+// Status will display the status of all procs started through StartGoBin.
 func (cli *Cli) Status() {
 	procs, err := cli.remoteClient.MonitStatus()
 	if err != nil {
@@ -70,6 +80,8 @@ func (cli *Cli) Status() {
 	fmt.Printf("-----------------------------------------------------------------------------------\n")
 }
 
+// PadString will add totalSize spaces evenly to the right and left side of str.
+// Returns str after applying the pad.
 func PadString(str string, totalSize int) string {
 	turn := 0
 	for {

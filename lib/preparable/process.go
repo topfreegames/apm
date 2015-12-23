@@ -5,6 +5,8 @@ import "strings"
 
 import "github.com/topfreegames/apm/lib/process"
 
+// ProcPreparable is a preparable with all the necessary informations to run
+// a process. To actually run a process, call the Start() method.
 type ProcPreparable struct {
 	Name       string
 	SourcePath string
@@ -15,6 +17,9 @@ type ProcPreparable struct {
 	Args       []string
 }
 
+// PrepareBin will compile the Golang project from SourcePath and populate Cmd with the proper
+// command for the process to be executed.
+// Returns the compile command output.
 func (proc_preparable *ProcPreparable) PrepareBin() ([]byte, error) {
 	// Remove the last character '/' if present
 	if proc_preparable.SourcePath[len(proc_preparable.SourcePath)-1] == '/' {
@@ -32,8 +37,10 @@ func (proc_preparable *ProcPreparable) PrepareBin() ([]byte, error) {
 	return exec.Command(cmd, cmdArgs...).Output()
 }
 
+// Start will execute the process based on the information presented on the preparable.
 // This function should be called from inside the master to make sure
 // all the watchers and process handling are done correctly.
+// Returns a tuple with the process and an error in case there's any.
 func (proc_preparable *ProcPreparable) Start() (*process.Proc, error) {
 	proc := &process.Proc{
 		Name:      proc_preparable.Name,
