@@ -160,7 +160,7 @@ func stopRemoteMasterServer() {
 
 	if ok, p, _ := isDaemonRunning(ctx); ok {
 		if err := p.Signal(syscall.Signal(syscall.SIGQUIT)); err != nil {
-			log.Fatal("Failed to kill daemon %v", err)
+			log.Fatalf("Failed to kill daemon %v", err)
 		}
 	} else {
 		ctx.Release()
