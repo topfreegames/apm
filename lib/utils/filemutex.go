@@ -6,11 +6,11 @@ import "syscall"
 
 type FileMutex struct {
 	mutex *sync.Mutex
-	file *os.File
+	file  *os.File
 }
 
 func MakeFileMutex(filename string) *FileMutex {
-	file, err := os.OpenFile(filename, os.O_RDONLY | os.O_CREATE, 0777)
+	file, err := os.OpenFile(filename, os.O_RDONLY|os.O_CREATE, 0777)
 	if err != nil {
 		return &FileMutex{file: nil}
 	}
@@ -35,4 +35,3 @@ func (fMutex *FileMutex) Unlock() {
 		}
 	}
 }
-

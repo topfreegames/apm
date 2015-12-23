@@ -1,7 +1,7 @@
 package process
 
 type ProcStatus struct {
-	Status string
+	Status   string
 	Restarts int
 }
 

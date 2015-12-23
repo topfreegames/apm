@@ -103,11 +103,11 @@ func StartRemoteClient(dsn string, timeout time.Duration) (*RemoteClient, error)
 // StartGoBin is a wrapper that calls the remote StartsGoBin.
 // It returns an error in case there's any.
 func (client *RemoteClient) StartGoBin(sourcePath string, name string, keepAlive bool, args []string) error {
-	goBin := &GoBin {
+	goBin := &GoBin{
 		SourcePath: sourcePath,
-		Name: name,
-		KeepAlive: keepAlive,
-		Args: args,
+		Name:       name,
+		KeepAlive:  keepAlive,
+		Args:       args,
 	}
 	var started bool
 	return client.conn.Call("RemoteMaster.StartGoBin", goBin, &started)
@@ -141,6 +141,3 @@ func (client *RemoteClient) MonitStatus() ([]*process.Proc, error) {
 	err := client.conn.Call("RemoteMaster.MonitStatus", "", &procs)
 	return procs, err
 }
-
-
-

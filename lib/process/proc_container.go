@@ -8,17 +8,17 @@ import "strconv"
 import "github.com/topfreegames/apm/lib/utils"
 
 type Proc struct {
-	Name string
-	Cmd string
-	Args []string
-	Path string
-	Pidfile string
-	Outfile string
-	Errfile string
+	Name      string
+	Cmd       string
+	Args      []string
+	Path      string
+	Pidfile   string
+	Outfile   string
+	Errfile   string
 	KeepAlive bool
-	Pid int
-	Status *ProcStatus
-	process *os.Process
+	Pid       int
+	Status    *ProcStatus
+	process   *os.Process
 }
 
 func (proc *Proc) Start() error {
@@ -31,10 +31,10 @@ func (proc *Proc) Start() error {
 		return err
 	}
 	wd, _ := os.Getwd()
-	procAtr := &os.ProcAttr {
+	procAtr := &os.ProcAttr{
 		Dir: wd,
 		Env: os.Environ(),
-		Files: []*os.File {
+		Files: []*os.File{
 			os.Stdin,
 			outFile,
 			errFile,
@@ -120,4 +120,3 @@ func (proc *Proc) release() {
 	}
 	utils.DeleteFile(proc.Pidfile)
 }
-

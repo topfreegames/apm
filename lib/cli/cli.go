@@ -13,9 +13,9 @@ type Cli struct {
 func InitCli(dsn string, timeout time.Duration) *Cli {
 	client, err := master.StartRemoteClient(dsn, timeout)
 	if err != nil {
-		log.Fatal("Failed to start remote client due to: %+v\n", err)
+		log.Fatalf("Failed to start remote client due to: %+v\n", err)
 	}
-	return &Cli {
+	return &Cli{
 		remoteClient: client,
 	}
 }
@@ -23,39 +23,38 @@ func InitCli(dsn string, timeout time.Duration) *Cli {
 func (cli *Cli) StartGoBin(sourcePath string, name string, keepAlive bool, args []string) {
 	err := cli.remoteClient.StartGoBin(sourcePath, name, keepAlive, args)
 	if err != nil {
-		log.Fatal("Failed to start go bin due to: %+v\n", err)
+		log.Fatalf("Failed to start go bin due to: %+v\n", err)
 	}
 }
 
 func (cli *Cli) StartProcess(procName string) {
 	err := cli.remoteClient.StartProcess(procName)
 	if err != nil {
-		log.Fatal("Failed to start process due to: %+v\n", err)
+		log.Fatalf("Failed to start process due to: %+v\n", err)
 	}
 }
 
 func (cli *Cli) StopProcess(procName string) {
 	err := cli.remoteClient.StopProcess(procName)
 	if err != nil {
-		log.Fatal("Failed to stop process due to: %+v\n", err)
+		log.Fatalf("Failed to stop process due to: %+v\n", err)
 	}
 }
 
 func (cli *Cli) DeleteProcess(procName string) {
 	err := cli.remoteClient.DeleteProcess(procName)
 	if err != nil {
-		log.Fatal("Failed to delete process due to: %+v\n", err)
+		log.Fatalf("Failed to delete process due to: %+v\n", err)
 	}
 }
-
 
 func (cli *Cli) Status() {
 	procs, err := cli.remoteClient.MonitStatus()
 	if err != nil {
-		log.Fatal("Failed to get status due to: %+v\n", err)
+		log.Fatalf("Failed to get status due to: %+v\n", err)
 	}
 	fmt.Printf("-----------------------------------------------------------------------------------\n")
-	fmt.Printf("|     pid     |             name             |     status     |     keep-alive     |\n")  
+	fmt.Printf("|     pid     |             name             |     status     |     keep-alive     |\n")
 	for id := range procs {
 		proc := procs[id]
 		kp := "True"
@@ -75,7 +74,7 @@ func PadString(str string, totalSize int) string {
 	turn := 0
 	for {
 		if len(str) >= totalSize {
-			return str
+			break
 		}
 		if turn == 0 {
 			str = " " + str

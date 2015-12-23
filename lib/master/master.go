@@ -36,13 +36,13 @@ import log "github.com/Sirupsen/logrus"
 type Master struct {
 	sync.Mutex
 
-	SysFolder       string                    // SysFolder is the main APM folder where the necessary config files will be stored.	        
-	PidFile         string                    // PidFille is the APM pid file path.
-	OutFile         string                    // OutFile is the APM output log file path.
-	ErrFile         string                    // ErrFile is the APM err log file path.
-	Watcher         *watcher.Watcher          // Watcher is a watcher instance.
-	
-	Procs           map[string]*process.Proc  // Procs is a map containing all procs started on APM.
+	SysFolder string           // SysFolder is the main APM folder where the necessary config files will be stored.
+	PidFile   string           // PidFille is the APM pid file path.
+	OutFile   string           // OutFile is the APM output log file path.
+	ErrFile   string           // ErrFile is the APM err log file path.
+	Watcher   *watcher.Watcher // Watcher is a watcher instance.
+
+	Procs map[string]*process.Proc // Procs is a map containing all procs started on APM.
 }
 
 // InitMaster will start a master instance with configFile.
@@ -76,7 +76,7 @@ func (master *Master) WatchProcs() {
 		}
 		log.Infof("Restarting proc %s.", proc.Name)
 		if proc.IsAlive() {
-			log.Warnf("Proc %s was supposed to be dead, but it is alive.", proc.Name)			
+			log.Warnf("Proc %s was supposed to be dead, but it is alive.", proc.Name)
 		}
 		master.Lock()
 		proc.Status.AddRestart()
@@ -91,13 +91,13 @@ func (master *Master) WatchProcs() {
 // Prepare will compile the source code into a binary and return a preparable
 // ready to be executed.
 func (master *Master) Prepare(sourcePath string, name string, language string, keepAlive bool, args []string) (*preparable.ProcPreparable, []byte, error) {
-	procPreparable := &preparable.ProcPreparable {
-		Name: name,
+	procPreparable := &preparable.ProcPreparable{
+		Name:       name,
 		SourcePath: sourcePath,
-		SysFolder: master.SysFolder,
-		Language: language,
-		KeepAlive: keepAlive,
-		Args: args,
+		SysFolder:  master.SysFolder,
+		Language:   language,
+		KeepAlive:  keepAlive,
+		Args:       args,
 	}
 	output, err := procPreparable.PrepareBin()
 	return procPreparable, output, err
@@ -218,7 +218,7 @@ func (master *Master) stop(proc *process.Proc) error {
 			return err
 		}
 		if waitStop != nil {
-			<- waitStop
+			<-waitStop
 			proc.Pid = -1
 			proc.Status.SetStatus("stopped")
 		}
@@ -243,7 +243,7 @@ func (master *Master) UpdateStatus() {
 
 func (master *Master) updateStatus(proc *process.Proc) {
 	if proc.IsAlive() {
-		proc.Status.SetStatus("running")		
+		proc.Status.SetStatus("running")
 	} else {
 		proc.Pid = -1
 		proc.Status.SetStatus("stopped")

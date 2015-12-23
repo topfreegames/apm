@@ -26,11 +26,11 @@ func SafeWriteTomlFile(v interface{}, filename string) error {
 	fileLock := MakeFileMutex(filename)
 	fileLock.Lock()
 	defer fileLock.Unlock()
-	f, err := os.OpenFile(filename, os.O_WRONLY | os.O_CREATE | os.O_TRUNC, 0777)
+	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 	defer f.Close()
 	if err != nil {
 		return err
-	}	
+	}
 	encoder := toml.NewEncoder(f)
 	return encoder.Encode(v)
 }
