@@ -26,6 +26,14 @@ type GoBin struct {
 	Args       []string // Args is an array containing all the extra args that will be passed to the binary after compilation.
 }
 
+// Ressurect will restore all previously save processes.
+// Returns an error in case there's any.
+func (remote_master *RemoteMaster) Ressurect(req string, ack *bool) error {
+	req = ""
+	*ack = true
+	return remote_master.master.Revive()
+}
+
 // StartGoBin will build a binary based on the arguments passed on goBin, then it will start the process
 // and keep it alive if KeepAlive is set to true.
 // It returns an error and binds true to ack pointer.
@@ -36,6 +44,13 @@ func (remote_master *RemoteMaster) StartGoBin(goBin *GoBin, ack *bool) error {
 		return fmt.Errorf("ERROR: %s OUTPUT: %s", err, string(output))
 	}
 	return remote_master.master.RunPreparable(preparable)
+}
+
+// RestartProcess will restart a process that was previously built using GoBin.
+// It returns an error in case there's any.
+func (remote_master *RemoteMaster) RestartProcess(procName string, ack *bool) error {
+	*ack = true
+	return remote_master.master.RestartProcess(procName)
 }
 
 // StartProcess will start a process that was previously built using GoBin.
@@ -100,6 +115,13 @@ func StartRemoteClient(dsn string, timeout time.Duration) (*RemoteClient, error)
 	return &RemoteClient{conn: rpc.NewClient(conn)}, nil
 }
 
+// Ressurect will restore all previously save processes.
+// Returns an error in case there's any.
+func (client *RemoteClient) Ressurect() error {
+	var started bool
+	return client.conn.Call("RemoteMaster.Ressurect", "", &started)
+}
+
 // StartGoBin is a wrapper that calls the remote StartsGoBin.
 // It returns an error in case there's any.
 func (client *RemoteClient) StartGoBin(sourcePath string, name string, keepAlive bool, args []string) error {
@@ -111,6 +133,13 @@ func (client *RemoteClient) StartGoBin(sourcePath string, name string, keepAlive
 	}
 	var started bool
 	return client.conn.Call("RemoteMaster.StartGoBin", goBin, &started)
+}
+
+// RestartProcess is a wrapper that calls the remote RestartProcess.
+// It returns an error in case there's any.
+func (client *RemoteClient) RestartProcess(procName string) error {
+	var started bool
+	return client.conn.Call("RemoteMaster.RestartProcess", procName, &started)
 }
 
 // StartProcess is a wrapper that calls the remote StartProcess.

@@ -20,6 +20,7 @@ package master
 
 import "path"
 import "errors"
+import "fmt"
 import "sync"
 
 import "time"
@@ -131,6 +132,15 @@ func (master *Master) ListProcs() []*process.Proc {
 	return procsList
 }
 
+// RestartProcess will restart a process.
+func (master *Master) RestartProcess(name string) error {
+	err := master.StopProcess(name)
+	if err != nil {
+		return err
+	}
+	return master.StartProcess(name)
+}
+
 // StartProcess will a start a process.
 func (master *Master) StartProcess(name string) error {
 	master.Lock()
@@ -173,7 +183,7 @@ func (master *Master) DeleteProcess(name string) error {
 
 // Revive will revive all procs listed on ListProcs. This should ONLY be called
 // during Master startup.
-func (master *Master) Revive() {
+func (master *Master) Revive() error {
 	master.Lock()
 	defer master.Unlock()
 	procs := master.ListProcs()
@@ -187,9 +197,10 @@ func (master *Master) Revive() {
 		log.Infof("Reviving proc %s", proc.Name)
 		err := master.start(proc)
 		if err != nil {
-			log.Infof("Failed to revive proc %s due to %s", proc.Name, err)
+			return fmt.Errorf("Failed to revive proc %s due to %s", proc.Name, err)
 		}
 	}
+	return nil
 }
 
 // NOT thread safe method. Lock should be acquire before calling it.

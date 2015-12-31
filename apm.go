@@ -48,12 +48,17 @@ var (
 	serve           = app.Command("serve", "Create APM server instance.")
 	serveConfigFile = serve.Flag("config-file", "Config file location").Required().String()
 
+	ressurect     = app.Command("ressurect", "Ressurect all previously save processes.")
+	
 	bin           = app.Command("bin", "Create bin process.")
 	binSourcePath = bin.Flag("source", "Go project source path. (Ex: github.com/topfreegames/apm)").Required().String()
 	binName       = bin.Arg("name", "Process name.").Required().String()
 	binKeepAlive  = bin.Flag("keep-alive", "Keep process alive forever.").Required().Bool()
 	binArgs       = bin.Flag("args", "External args.").Strings()
 
+	restart     = app.Command("restart", "Restart a process.")
+	restartName = restart.Arg("name", "Process name.").Required().String()
+	
 	start     = app.Command("start", "Start a process.")
 	startName = start.Arg("name", "Process name.").Required().String()
 
@@ -72,9 +77,15 @@ func main() {
 		stopRemoteMasterServer()
 	case serve.FullCommand():
 		startRemoteMasterServer()
+	case ressurect.FullCommand():
+		cli := cli.InitCli(*dns, *timeout)
+		cli.Ressurect()
 	case bin.FullCommand():
 		cli := cli.InitCli(*dns, *timeout)
 		cli.StartGoBin(*binSourcePath, *binName, *binKeepAlive, *binArgs)
+	case restart.FullCommand():
+		cli := cli.InitCli(*dns, *timeout)
+		cli.RestartProcess(*restartName)
 	case start.FullCommand():
 		cli := cli.InitCli(*dns, *timeout)
 		cli.StartProcess(*startName)

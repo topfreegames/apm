@@ -23,12 +23,30 @@ func InitCli(dsn string, timeout time.Duration) *Cli {
 	}
 }
 
+
+// Ressurect will restore all previously save processes.
+// Display an error in case there's any.
+func (cli *Cli) Ressurect() {
+	err := cli.remoteClient.Ressurect()
+	if err != nil {
+		log.Fatalf("Failed to ressurect all previously save processes due to: %+v\n", err)
+	}
+}
 // StartGoBin will try to start a go binary process.
 // Returns a fatal error in case there's any.
 func (cli *Cli) StartGoBin(sourcePath string, name string, keepAlive bool, args []string) {
 	err := cli.remoteClient.StartGoBin(sourcePath, name, keepAlive, args)
 	if err != nil {
 		log.Fatalf("Failed to start go bin due to: %+v\n", err)
+	}
+}
+
+// RestartProcess will try to restart a process with procName. Note that this process
+// must have been already started through StartGoBin.
+func (cli *Cli) RestartProcess(procName string) {
+	err := cli.remoteClient.RestartProcess(procName)
+	if err != nil {
+		log.Fatalf("Failed to restart process due to: %+v\n", err)
 	}
 }
 
