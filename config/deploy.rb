@@ -14,12 +14,12 @@ set :scm, :git
 set :format, :pretty
 set :pty, true
 
-set :deploy_to, "/tmp/apps/#{fetch :application}/#{fetch :stage}"
+set :deploy_to, "/var/apps/#{fetch :application}/#{fetch :stage}"
 set :shared_path, "#{fetch :deploy_to}/shared"
 
 set :gopath, "#{fetch :shared_path}/gopath"
-set :gobin, "/usr/local/bin"
-set :goenv, "GOPATH=#{fetch :gopath} GOBIN=#{fetch :gobin} PATH=\"$GOBIN:/usr/local/go/bin:$PATH\""
+set :gobin, "/usr/local/go/bin"
+set :goenv, "GOPATH=#{fetch :gopath} GOBIN=#{fetch :gobin} PATH=\"/usr/local/go/bin:$PATH\""
 
 set :go, "#{fetch :goenv} go"
 
