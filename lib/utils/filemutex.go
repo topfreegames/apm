@@ -4,13 +4,16 @@ import "sync"
 import "os"
 import "syscall"
 
+// FileMutex is a wrapper used to create lock on files.
 type FileMutex struct {
 	mutex *sync.Mutex
-	file *os.File
+	file  *os.File
 }
 
+// MakeFileMutex will create a FileMutex intance.
+// Returns a FileMutex instance.
 func MakeFileMutex(filename string) *FileMutex {
-	file, err := os.OpenFile(filename, os.O_RDONLY | os.O_CREATE, 0777)
+	file, err := os.OpenFile(filename, os.O_RDONLY|os.O_CREATE, 0777)
 	if err != nil {
 		return &FileMutex{file: nil}
 	}
@@ -18,6 +21,7 @@ func MakeFileMutex(filename string) *FileMutex {
 	return &FileMutex{file: file, mutex: mutex}
 }
 
+// Lock will try to acquire a lock on the file.
 func (fMutex *FileMutex) Lock() {
 	fMutex.mutex.Lock()
 	if fMutex.file != nil {
@@ -27,6 +31,7 @@ func (fMutex *FileMutex) Lock() {
 	}
 }
 
+// Unlock will try to release a lock on a file.
 func (fMutex *FileMutex) Unlock() {
 	fMutex.mutex.Unlock()
 	if fMutex.file != nil {
@@ -35,4 +40,3 @@ func (fMutex *FileMutex) Unlock() {
 		}
 	}
 }
-

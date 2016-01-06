@@ -7,20 +7,25 @@ import "strconv"
 
 import "github.com/topfreegames/apm/lib/utils"
 
+// Proc is a os.Process wrapper with Status and more info that will be used on Master to maintain
+// the process health.
 type Proc struct {
-	Name string
-	Cmd string
-	Args []string
-	Path string
-	Pidfile string
-	Outfile string
-	Errfile string
+	Name      string
+	Cmd       string
+	Args      []string
+	Path      string
+	Pidfile   string
+	Outfile   string
+	Errfile   string
 	KeepAlive bool
-	Pid int
-	Status *ProcStatus
-	process *os.Process
+	Pid       int
+	Status    *ProcStatus
+	process   *os.Process
 }
 
+// Start will execute the command Cmd that should run the process. It will also create an out, err and pidfile
+// in case they do not exist yet.
+// Returns an error in case there's any.
 func (proc *Proc) Start() error {
 	outFile, err := utils.GetFile(proc.Outfile)
 	if err != nil {
@@ -31,10 +36,10 @@ func (proc *Proc) Start() error {
 		return err
 	}
 	wd, _ := os.Getwd()
-	procAtr := &os.ProcAttr {
+	procAtr := &os.ProcAttr{
 		Dir: wd,
 		Env: os.Environ(),
-		Files: []*os.File {
+		Files: []*os.File{
 			os.Stdin,
 			outFile,
 			errFile,
@@ -56,7 +61,8 @@ func (proc *Proc) Start() error {
 	return nil
 }
 
-// Will forcefully kill the process
+// ForceStop will forcefully send a SIGKILL signal to process killing it instantly.
+// Returns an error in case there's any.
 func (proc *Proc) ForceStop() error {
 	if proc.process != nil {
 		err := proc.process.Signal(syscall.SIGKILL)
@@ -67,8 +73,10 @@ func (proc *Proc) ForceStop() error {
 	return errors.New("Process does not exist.")
 }
 
-// Will send a SIGTERM signal asking the process
-// to terminate. Note that the process may choose to ignore it.
+// GracefullyStop will send a SIGTERM signal asking the process to terminate.
+// The process may choose to die gracefully or ignore this signal completely. In that case
+// the process will keep running unless you call ForceStop()
+// Returns an error in case there's any.
 func (proc *Proc) GracefullyStop() error {
 	if proc.process != nil {
 		err := proc.process.Signal(syscall.SIGTERM)
@@ -78,6 +86,8 @@ func (proc *Proc) GracefullyStop() error {
 	return errors.New("Process does not exist.")
 }
 
+// Restart will try to gracefully stop the process and then Start it again.
+// Returns an error in case there's any.
 func (proc *Proc) Restart() error {
 	if proc.IsAlive() {
 		err := proc.GracefullyStop()
@@ -88,6 +98,8 @@ func (proc *Proc) Restart() error {
 	return proc.Start()
 }
 
+// Delete will delete everything created by this process, including the out, err and pid file.
+// Returns an error in case there's any.
 func (proc *Proc) Delete() error {
 	proc.release()
 	err := utils.DeleteFile(proc.Outfile)
@@ -101,6 +113,8 @@ func (proc *Proc) Delete() error {
 	return os.RemoveAll(proc.Path)
 }
 
+// IsAlive will check if the process is alive or not.
+// Returns true if the process is alive or false otherwise.
 func (proc *Proc) IsAlive() bool {
 	p, err := os.FindProcess(proc.Pid)
 	if err != nil {
@@ -109,6 +123,8 @@ func (proc *Proc) IsAlive() bool {
 	return p.Signal(syscall.Signal(0)) == nil
 }
 
+// Watch will stop execution and wait until the process change its state. Usually changing state, means that the process died.
+// Returns a tuple with the new process state and an error in case there's any.
 func (proc *Proc) Watch() (*os.ProcessState, error) {
 	return proc.process.Wait()
 }
@@ -120,4 +136,3 @@ func (proc *Proc) release() {
 	}
 	utils.DeleteFile(proc.Pidfile)
 }
-
