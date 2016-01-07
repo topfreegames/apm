@@ -48,7 +48,7 @@ namespace :deploy do
   desc 'Start'
   task :start do
     on roles(:app) do
-      execute "cd #{fetch :gopath}/src/#{fetch :apm_go_repo} && apm serve --config-file=\"#{fetch :apm_config_path}\""
+      execute "cd #{fetch :gopath}/src/#{fetch :apm_go_repo} && ./apm serve --config-file=\"#{fetch :apm_config_path}\""
     end
   end
   
