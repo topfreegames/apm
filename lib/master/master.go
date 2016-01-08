@@ -60,7 +60,7 @@ func InitMaster(configFile string) *Master {
 	master.Revive()
 	log.Infof("All procs revived...")
 	go master.WatchProcs()
-	go master.SaveProcs()
+	go master.SaveProcsLoop()
 	go master.UpdateStatus()
 	return master
 }
@@ -117,7 +117,7 @@ func (master *Master) RunPreparable(procPreparable *preparable.ProcPreparable) e
 		return err
 	}
 	master.Procs[proc.Name] = proc
-	master.saveProcs()
+	master.SaveProcs()
 	master.Watcher.AddProcWatcher(proc)
 	proc.Status.SetStatus("running")
 	return nil
@@ -271,11 +271,11 @@ func (master *Master) restart(proc *process.Proc) error {
 }
 
 // SaveProcs will save the list of procs onto the proc file.
-func (master *Master) SaveProcs() {
+func (master *Master) SaveProcsLoop() {
 	for {
 		log.Infof("Saving list of procs.")
 		master.Lock()
-		master.saveProcs()
+		master.SaveProcs()
 		master.Unlock()
 		time.Sleep(5 * time.Minute)
 	}
@@ -291,11 +291,13 @@ func (master *Master) Stop() error {
 		master.stop(proc)
 	}
 	log.Info("Saving and returning list of procs.")
-	return master.saveProcs()
+	return master.SaveProcs()
 }
 
 // NOT thread safe method. Lock should be acquire before calling it.
-func (master *Master) saveProcs() error {
+// SaveProcs will save a list of procs onto a file inside configPath.
+// Returns an error in case there's any.
+func (master *Master) SaveProcs() error {
 	configPath := master.getConfigPath()
 	return utils.SafeWriteTomlFile(master, configPath)
 }

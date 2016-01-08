@@ -27,7 +27,7 @@ $ go get github.com/topfreegames/apm
 ## Start APM
 
 ```bash
-$ ./apm serve --config-file="config/file/path.toml"
+$ apm serve --config-file="config/file/path.toml"
 ```
 
 ## Main features
@@ -35,15 +35,19 @@ $ ./apm serve --config-file="config/file/path.toml"
 ### Commands overview
 
 ```bash
-$ ./apm serve --config-file="config/file/path.toml"
-$ ./apm serve-stop --config-file="config/file/path.toml"
+$ apm serve --config-file="config/file/path.toml"
+$ apm serve-stop --config-file="config/file/path.toml"
 
-$ ./apm bin app-name --source="github.com/topfreegames/apm"   # Compile, start, daemonize and auto restart application.
-$ ./apm start app-name                                        # Start, daemonize and auto restart application.
-$ ./apm stop app-name                                         # Stop application.
-$ ./apm delete app-name                                       # Delete application forever.
+$ apm bin app-name --source="github.com/topfreegames/apm"   # Compile, start, daemonize and auto restart application.
+$ apm start app-name                                        # Start, daemonize and auto restart application.
+$ apm restart app-name                                      # Restart a previously saved process
+$ apm stop app-name                                         # Stop application.
+$ apm delete app-name                                       # Delete application forever.
 
-$ ./apm status                                                # Display status for each app.
+$ apm save                                                  # Save current process list
+$ apm ressurect                                             # Restore previously saved processes
+
+$ apm status                                                # Display status for each app.
 
 ### Managing process via HTTP
 

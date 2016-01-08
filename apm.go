@@ -55,7 +55,7 @@ var (
 	binName       = bin.Arg("name", "Process name.").Required().String()
 	binKeepAlive  = bin.Flag("keep-alive", "Keep process alive forever.").Required().Bool()
 	binArgs       = bin.Flag("args", "External args.").Strings()
-
+	
 	restart     = app.Command("restart", "Restart a process.")
 	restartName = restart.Arg("name", "Process name.").Required().String()
 	
@@ -68,6 +68,8 @@ var (
 	delete     = app.Command("delete", "Delete a process.")
 	deleteName = delete.Arg("name", "Process name.").Required().String()
 
+	save = app.Command("save", "Save a list of processes onto a file.")
+	
 	status = app.Command("status", "Get APM status.")
 )
 
@@ -95,6 +97,9 @@ func main() {
 	case delete.FullCommand():
 		cli := cli.InitCli(*dns, *timeout)
 		cli.DeleteProcess(*deleteName)
+	case save.FullCommand():
+		cli := cli.InitCli(*dns, *timeout)
+		cli.Save()
 	case status.FullCommand():
 		cli := cli.InitCli(*dns, *timeout)
 		cli.Status()
