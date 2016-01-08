@@ -23,6 +23,14 @@ func InitCli(dsn string, timeout time.Duration) *Cli {
 	}
 }
 
+// Save will save all previously saved processes onto a list.
+// Display an error in case there's any.
+func (cli *Cli) Save() {
+	err := cli.remoteClient.Save()
+	if err != nil {
+		log.Fatalf("Failed to save list of processes due to: %+v\n", err)
+	}
+}
 
 // Ressurect will restore all previously save processes.
 // Display an error in case there's any.

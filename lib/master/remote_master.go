@@ -26,6 +26,14 @@ type GoBin struct {
 	Args       []string // Args is an array containing all the extra args that will be passed to the binary after compilation.
 }
 
+// Save will save the current running and stopped processes onto a file.
+// Returns an error in case there's any.
+func (remote_master *RemoteMaster) Save(req string, ack *bool) error {
+	req = ""
+	*ack = true
+	return remote_master.master.SaveProcs()
+}
+
 // Ressurect will restore all previously save processes.
 // Returns an error in case there's any.
 func (remote_master *RemoteMaster) Ressurect(req string, ack *bool) error {
@@ -113,6 +121,13 @@ func StartRemoteClient(dsn string, timeout time.Duration) (*RemoteClient, error)
 		return nil, err
 	}
 	return &RemoteClient{conn: rpc.NewClient(conn)}, nil
+}
+
+// Save will save a list of procs onto a file.
+// Returns an error in case there's any.
+func (client *RemoteClient) Save() error {
+	var started bool
+	return client.conn.Call("RemoteMaster.Save", "", &started)
 }
 
 // Ressurect will restore all previously save processes.
