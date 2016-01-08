@@ -56,6 +56,9 @@ func InitMaster(configFile string) *Master {
 	if err != nil {
 		panic(err)
 	}
+	if master.SysFolder == "" {
+		master.SysFolder = path.Dir(configFile) + "/"
+	}
 	master.Watcher = watcher
 	master.Revive()
 	log.Infof("All procs revived...")
