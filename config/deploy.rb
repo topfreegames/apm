@@ -29,6 +29,9 @@ set :goinstall, "#{fetch :go} install"
 
 set :apm_config_path, "#{fetch :shared_path}/apm-config/config.toml"
 
+set :goget_hack, "git config --global url.\"git@git.topfreegames.com:\".insteadOf \"http\
+s://git.topfreegames.com/\""
+
 namespace :deploy do
 
   desc 'Link repo'
@@ -37,6 +40,7 @@ namespace :deploy do
       execute "mkdir -p \"$(dirname \"#{fetch :apm_config_path}\")\" && touch \"#{fetch :apm_config_path}\""
       execute "mkdir -p #{fetch :gopath}/src/#{fetch :tfg_go_repo}"
       execute "ln -snf #{fetch :release_path} #{fetch :gopath}/src/#{fetch :apm_go_repo}"      
+      execute "#{fetch :goget_hack} && #{fetch :go} git.topfreegames.com/topfreegames/aguia/lib"
     end    
   end
   desc 'Compile'
@@ -48,7 +52,7 @@ namespace :deploy do
   desc 'Start'
   task :start do
     on roles(:app) do
-      execute "cd #{fetch :gopath}/src/#{fetch :apm_go_repo} && ./apm serve --config-file=\"#{fetch :apm_config_path}\""
+      execute "cd #{fetch :gopath}/src/#{fetch :apm_go_repo} && #{fetch :goenv} ./apm serve --config-file=\"#{fetch :apm_config_path}\""
     end
   end
   
