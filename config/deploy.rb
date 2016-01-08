@@ -21,7 +21,11 @@ set :gopath, "#{fetch :shared_path}/gopath"
 set :gobin, "/usr/local/go/bin"
 set :goenv, "GOPATH=#{fetch :gopath} GOBIN=#{fetch :gobin} PATH=\"/usr/local/go/bin:$PATH\""
 
+set :new_goenv, "GOPATH=$HOME/go GOROOT=/usr/local/go PATH=$PATH:$GOROOT/bin"
+
 set :go, "#{fetch :goenv} go"
+
+set :new_go, "#{fetch :new_goenv} go"
 
 set :goget, "#{fetch :go} get -u -f all || true && #{fetch :go} get"
 set :gobuild, "#{fetch :go} build"
@@ -40,7 +44,7 @@ namespace :deploy do
       execute "mkdir -p \"$(dirname \"#{fetch :apm_config_path}\")\" && touch \"#{fetch :apm_config_path}\""
       execute "mkdir -p #{fetch :gopath}/src/#{fetch :tfg_go_repo}"
       execute "ln -snf #{fetch :release_path} #{fetch :gopath}/src/#{fetch :apm_go_repo}"      
-      execute "#{fetch :goget_hack} && #{fetch :go} git.topfreegames.com/topfreegames/aguia/lib"
+      execute "#{fetch :goget_hack} && #{fetch :new_go} get git.topfreegames.com/topfreegames/aguia/lib"
     end    
   end
   desc 'Compile'
@@ -52,7 +56,7 @@ namespace :deploy do
   desc 'Start'
   task :start do
     on roles(:app) do
-      execute "cd #{fetch :gopath}/src/#{fetch :apm_go_repo} && #{fetch :goenv} ./apm serve --config-file=\"#{fetch :apm_config_path}\""
+      execute "cd #{fetch :gopath}/src/#{fetch :apm_go_repo} && #{fetch :new_goenv} ./apm serve --config-file=\"#{fetch :apm_config_path}\""
     end
   end
   
