@@ -34,9 +34,9 @@ func (remote_master *RemoteMaster) Save(req string, ack *bool) error {
 	return remote_master.master.SaveProcs()
 }
 
-// Ressurect will restore all previously save processes.
+// Resurrect will restore all previously save processes.
 // Returns an error in case there's any.
-func (remote_master *RemoteMaster) Ressurect(req string, ack *bool) error {
+func (remote_master *RemoteMaster) Resurrect(req string, ack *bool) error {
 	req = ""
 	*ack = true
 	return remote_master.master.Revive()
@@ -114,7 +114,7 @@ func StartRemoteMasterServer(dsn string, configFile string) *RemoteMaster {
 
 // StartRemoteClient will start a remote client that can talk to a remote server that
 // is already running on dsn address.
-// It returns an error in case there's any or it could not connect withing the timeout.
+// It returns an error in case there's any or it could not connect within the timeout.
 func StartRemoteClient(dsn string, timeout time.Duration) (*RemoteClient, error) {
 	conn, err := net.DialTimeout("tcp", dsn, timeout)
 	if err != nil {
@@ -130,11 +130,11 @@ func (client *RemoteClient) Save() error {
 	return client.conn.Call("RemoteMaster.Save", "", &started)
 }
 
-// Ressurect will restore all previously save processes.
+// Resurrect will restore all previously save processes.
 // Returns an error in case there's any.
-func (client *RemoteClient) Ressurect() error {
+func (client *RemoteClient) Resurrect() error {
 	var started bool
-	return client.conn.Call("RemoteMaster.Ressurect", "", &started)
+	return client.conn.Call("RemoteMaster.Resurrect", "", &started)
 }
 
 // StartGoBin is a wrapper that calls the remote StartsGoBin.

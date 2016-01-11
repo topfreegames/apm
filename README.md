@@ -45,7 +45,7 @@ $ apm stop app-name                                         # Stop application.
 $ apm delete app-name                                       # Delete application forever.
 
 $ apm save                                                  # Save current process list
-$ apm ressurect                                             # Restore previously saved processes
+$ apm resurrect                                             # Restore previously saved processes
 
 $ apm status                                                # Display status for each app.
 

@@ -32,12 +32,12 @@ func (cli *Cli) Save() {
 	}
 }
 
-// Ressurect will restore all previously save processes.
+// Resurrect will restore all previously save processes.
 // Display an error in case there's any.
-func (cli *Cli) Ressurect() {
-	err := cli.remoteClient.Ressurect()
+func (cli *Cli) Resurrect() {
+	err := cli.remoteClient.Resurrect()
 	if err != nil {
-		log.Fatalf("Failed to ressurect all previously save processes due to: %+v\n", err)
+		log.Fatalf("Failed to resurrect all previously save processes due to: %+v\n", err)
 	}
 }
 // StartGoBin will try to start a go binary process.
