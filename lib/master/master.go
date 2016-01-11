@@ -120,7 +120,7 @@ func (master *Master) RunPreparable(procPreparable *preparable.ProcPreparable) e
 		return err
 	}
 	master.Procs[proc.Name] = proc
-	master.SaveProcs()
+	master.saveProcsWrapper()
 	master.Watcher.AddProcWatcher(proc)
 	proc.Status.SetStatus("running")
 	return nil
@@ -236,7 +236,7 @@ func (master *Master) stop(proc *process.Proc) error {
 			proc.Pid = -1
 			proc.Status.SetStatus("stopped")
 		}
-		log.Infof("Proc %s sucessfully stopped.", proc.Name)
+		log.Infof("Proc %s successfully stopped.", proc.Name)
 	}
 	return nil
 }
@@ -273,12 +273,12 @@ func (master *Master) restart(proc *process.Proc) error {
 	return master.start(proc)
 }
 
-// SaveProcs will save the list of procs onto the proc file.
+// SaveProcsLoop will loop forever to save the list of procs onto the proc file.
 func (master *Master) SaveProcsLoop() {
 	for {
 		log.Infof("Saving list of procs.")
 		master.Lock()
-		master.SaveProcs()
+		master.saveProcsWrapper()
 		master.Unlock()
 		time.Sleep(5 * time.Minute)
 	}
@@ -294,13 +294,19 @@ func (master *Master) Stop() error {
 		master.stop(proc)
 	}
 	log.Info("Saving and returning list of procs.")
-	return master.SaveProcs()
+	return master.saveProcsWrapper()
 }
 
-// NOT thread safe method. Lock should be acquire before calling it.
 // SaveProcs will save a list of procs onto a file inside configPath.
 // Returns an error in case there's any.
 func (master *Master) SaveProcs() error {
+	master.Lock()
+	defer master.Unlock()
+	return master.saveProcsWrapper()
+}
+
+// NOT Thread Safe. Lock should be acquired before calling it.
+func (master *Master) saveProcsWrapper() error {
 	configPath := master.getConfigPath()
 	return utils.SafeWriteTomlFile(master, configPath)
 }
