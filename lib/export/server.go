@@ -49,7 +49,6 @@ func (apmHandler *ApmHandler) DeleteProc(procName string) (err error) {
 }
 
 func (apmHandler *ApmHandler) Monit() (r []*apm.Proc, err error) {
-	fmt.Println("OLA......")
 	procs := apmHandler.master.ListProcs()
 	r = []*apm.Proc{}
 	for id := range procs {
@@ -75,7 +74,6 @@ func (apmHandler *ApmHandler) Monit() (r []*apm.Proc, err error) {
 }
 
 func RunServer(addr string, configFile string) (*master.Master, error) {
-	fmt.Printf("ADDR IS: %s\n", addr)
 	transportFactory := thrift.NewTTransportFactory()
 	protocolFactory := thrift.NewTBinaryProtocolFactoryDefault()
 	transportFactory = thrift.NewTBufferedTransportFactory(8192)
