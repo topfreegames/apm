@@ -1,6 +1,6 @@
 <div align="center">
      <a>
-        <img src="http://png.bychuhe.com/wp-content/uploads/2014/07/eagle-png-image.jpg">
+        <img height="400px" width="400px" src="https://cloud.githubusercontent.com/assets/5413599/12247882/2fcb1ca6-b89d-11e5-933e-efade26acf13.jpg">
      </a>
      <br/>
      <b>A</b>(guia) <b>P</b>(rocess) <b>M</b>(anager)
