@@ -18,6 +18,7 @@ It will start the remote client and return the instance so you can use to initia
 
 package master
 
+import "os"
 import "path"
 import "errors"
 import "fmt"
@@ -52,11 +53,14 @@ func InitMaster(configFile string) *Master {
 	watcher := watcher.InitWatcher()
 	master := &Master{}
 	master.Procs = make(map[string]*process.Proc)
+
 	err := utils.SafeReadTomlFile(configFile, master)
 	if err != nil {
 		panic(err)
 	}
+	
 	if master.SysFolder == "" {
+		os.MkdirAll(path.Dir(configFile), 0777)
 		master.SysFolder = path.Dir(configFile) + "/"
 	}
 	master.Watcher = watcher

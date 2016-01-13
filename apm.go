@@ -23,6 +23,7 @@ It will start the remote client and return the instance so you can use to initia
 */
 package main
 
+import "github.com/kardianos/osext"
 import "gopkg.in/alecthomas/kingpin.v2"
 import "github.com/topfreegames/apm/lib/cli"
 import "github.com/topfreegames/apm/lib/master"
@@ -43,10 +44,10 @@ var (
 	timeout = app.Flag("timeout", "Timeout to connect to client").Default("30s").Duration()
 
 	serveStop           = app.Command("serve-stop", "Stop APM server instance.")
-	serveStopConfigFile = serveStop.Flag("config-file", "Config file location").Required().String()
+	serveStopConfigFile = serveStop.Flag("config-file", "Config file location").String()
 
 	serve           = app.Command("serve", "Create APM server instance.")
-	serveConfigFile = serve.Flag("config-file", "Config file location").Required().String()
+	serveConfigFile = serve.Flag("config-file", "Config file location").String()
 
 	resurrect     = app.Command("resurrect", "Resurrect all previously save processes.")
 	
@@ -121,6 +122,14 @@ func isDaemonRunning(ctx *daemon.Context) (bool, *os.Process, error) {
 }
 
 func startRemoteMasterServer() {
+	if *serveConfigFile == "" {
+		folderPath, err := osext.ExecutableFolder()
+		if err != nil {
+			log.Fatal(err)
+		}
+		*serveConfigFile = folderPath + "/.apmenv/config.toml"
+		os.MkdirAll(path.Dir(*serveConfigFile), 0777)
+	}
 	ctx := &daemon.Context{
 		PidFileName: path.Join(filepath.Dir(*serveConfigFile), "main.pid"),
 		PidFilePerm: 0644,
@@ -165,6 +174,14 @@ func startRemoteMasterServer() {
 }
 
 func stopRemoteMasterServer() {
+	if *serveStopConfigFile == "" {
+		folderPath, err := osext.ExecutableFolder()
+		if err != nil {
+			log.Fatal(err)
+		}
+		*serveStopConfigFile = folderPath + "/.apmenv/config.toml"
+		os.MkdirAll(path.Dir(*serveStopConfigFile), 0777)
+	}
 	ctx := &daemon.Context{
 		PidFileName: path.Join(filepath.Dir(*serveStopConfigFile), "main.pid"),
 		PidFilePerm: 0644,

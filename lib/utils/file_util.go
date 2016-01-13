@@ -15,7 +15,7 @@ func WriteFile(filepath string, b []byte) error {
 // GetFile will open filepath.
 // Returns a tuple with a file and an error in case there's any.
 func GetFile(filepath string) (*os.File, error) {
-	return os.OpenFile(filepath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0777)
+	return os.OpenFile(filepath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0777)
 }
 
 // SafeReadTomlFile will try to acquire a lock on the file and then read its content afterwards.
@@ -30,7 +30,6 @@ func SafeReadTomlFile(filename string, v interface{}) error {
 }
 
 // SafeWriteTomlFile will try to acquire a lock on the file and then write to it.
-// Returns an error in case there's any.
 // Returns an error in case there's any.
 func SafeWriteTomlFile(v interface{}, filename string) error {
 	fileLock := MakeFileMutex(filename)
