@@ -19,6 +19,7 @@ set :shared_path, "#{fetch :deploy_to}/shared"
 
 set :gopath, "#{fetch :shared_path}/gopath"
 set :gobin, "/usr/local/go/bin"
+
 set :goenv, "export GOPATH=#{fetch :gopath} GOBIN=#{fetch :gobin} PATH=\"/usr/local/go/bin:$PATH\" &&"
 
 set :new_goenv, "export GOPATH=\"$HOME/go\" GOBIN=#{fetch :gobin} PATH=$PATH:\"/usr/local/go/bin\" &&"
@@ -34,9 +35,6 @@ set :goinstall, "#{fetch :go} install"
 set :new_goget, "#{fetch :new_go} get -u -f all || true && #{fetch :new_go} get"
 
 set :apm_config_path, "#{fetch :shared_path}/apm-config/config.toml"
-
-set :goget_hack, "git config --global url.\"git@git.topfreegames.com:\".insteadOf \"http\
-s://git.topfreegames.com/\""
 
 namespace :deploy do
 
