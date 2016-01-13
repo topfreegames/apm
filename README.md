@@ -28,7 +28,14 @@ $ go get github.com/topfreegames/apm
 ## Start APM
 
 ```bash
-$ apm serve --config-file="config/file/path.toml"
+$ apm serve
+```
+If not config file is provided, it will default to a folder '.apmenv' where apm is first started.
+
+## Stop APM
+
+```bash
+$ apm serve-stop
 ```
 
 ## Main features
