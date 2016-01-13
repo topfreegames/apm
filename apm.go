@@ -9,23 +9,23 @@ If you need to use the remote version of APM, take a look at RemoteMaster on Mas
 
 To use the remote version of APM, use:
 
-- remoteServer := master.StartRemoteMasterServer(dsn, configFile)
+- remoteServer, err := export.RunServer(dsn, configFile)
 
 It will start a remote master and return the instance.
 
 To make remote requests, use the Remote Client by instantiating using:
 
-- remoteClient, err := master.StartRemoteClient(dsn, timeout)
+- remoteClient, err := export.NewClient(dsn, timeout)
 
 It will start the remote client and return the instance so you can use to initiate requests, such as:
 
-- remoteClient.StartGoBin(sourcePath, name, keepAlive, args)
+- remoteClient.Gobin(goBin)
 */
 package main
 
 import "gopkg.in/alecthomas/kingpin.v2"
 import "github.com/topfreegames/apm/lib/cli"
-import "github.com/topfreegames/apm/lib/master"
+import "github.com/topfreegames/apm/lib/export"
 
 import "github.com/sevlyar/go-daemon"
 
@@ -39,7 +39,7 @@ import log "github.com/Sirupsen/logrus"
 
 var (
 	app     = kingpin.New("apm", "Aguia Process Manager.")
-	dns     = app.Flag("dns", "TCP Dns host.").Default(":9876").String()
+	dns     = app.Flag("dns", "TCP Dns host.").Default("localhost:9090").String()
 	timeout = app.Flag("timeout", "Timeout to connect to client").Default("30s").Duration()
 
 	serveStop           = app.Command("serve-stop", "Stop APM server instance.")
@@ -82,27 +82,35 @@ func main() {
 	case resurrect.FullCommand():
 		cli := cli.InitCli(*dns, *timeout)
 		cli.Resurrect()
+		cli.Close()
 	case bin.FullCommand():
 		cli := cli.InitCli(*dns, *timeout)
 		cli.StartGoBin(*binSourcePath, *binName, *binKeepAlive, *binArgs)
+		cli.Close()
 	case restart.FullCommand():
 		cli := cli.InitCli(*dns, *timeout)
 		cli.RestartProcess(*restartName)
+		cli.Close()
 	case start.FullCommand():
 		cli := cli.InitCli(*dns, *timeout)
 		cli.StartProcess(*startName)
+		cli.Close()
 	case stop.FullCommand():
 		cli := cli.InitCli(*dns, *timeout)
 		cli.StopProcess(*stopName)
+		cli.Close()
 	case delete.FullCommand():
 		cli := cli.InitCli(*dns, *timeout)
 		cli.DeleteProcess(*deleteName)
+		cli.Close()
 	case save.FullCommand():
 		cli := cli.InitCli(*dns, *timeout)
 		cli.Save()
+		cli.Close()
 	case status.FullCommand():
 		cli := cli.InitCli(*dns, *timeout)
 		cli.Status()
+		cli.Close()
 	}
 }
 
@@ -147,8 +155,12 @@ func startRemoteMasterServer() {
 	defer ctx.Release()
 
 	log.Info("Starting remote master server...")
-	remoteMaster := master.StartRemoteMasterServer(*dns, *serveConfigFile)
+	remoteMaster, err := export.RunServer(*dns, *serveConfigFile)
 
+	if err != nil {
+		log.Fatal(err)
+	}
+	
 	sigsKill := make(chan os.Signal, 1)
 	signal.Notify(sigsKill,
 		syscall.SIGINT,

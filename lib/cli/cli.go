@@ -1,6 +1,7 @@
 package cli
 
-import "github.com/topfreegames/apm/lib/master"
+import "github.com/topfreegames/apm/lib/export"
+import "github.com/topfreegames/apm/lib/export/gen-go/apm"
 
 import "log"
 import "time"
@@ -8,14 +9,15 @@ import "fmt"
 
 // Cli is the command line client.
 type Cli struct {
-	remoteClient *master.RemoteClient
+	remoteClient *apm.ApmClient
 }
 
 // InitCli initiates a remote client connecting to dsn.
 // Returns a Cli instance.
 func InitCli(dsn string, timeout time.Duration) *Cli {
-	client, err := master.StartRemoteClient(dsn, timeout)
+	client, err := export.NewClient(dsn, timeout)
 	if err != nil {
+		client.Transport.Close()
 		log.Fatalf("Failed to start remote client due to: %+v\n", err)
 	}
 	return &Cli{
@@ -23,12 +25,16 @@ func InitCli(dsn string, timeout time.Duration) *Cli {
 	}
 }
 
+func (cli *Cli) Close() {
+	cli.remoteClient.Transport.Close()
+}
+
 // Save will save all previously saved processes onto a list.
 // Display an error in case there's any.
 func (cli *Cli) Save() {
 	err := cli.remoteClient.Save()
 	if err != nil {
-		log.Fatalf("Failed to save list of processes due to: %+v\n", err)
+		log.Printf("Failed to save list of processes due to: %+v\n", err)
 	}
 }
 
@@ -37,57 +43,63 @@ func (cli *Cli) Save() {
 func (cli *Cli) Resurrect() {
 	err := cli.remoteClient.Resurrect()
 	if err != nil {
-		log.Fatalf("Failed to resurrect all previously save processes due to: %+v\n", err)
+		log.Printf("Failed to resurrect all previously save processes due to: %+v\n", err)
 	}
 }
 // StartGoBin will try to start a go binary process.
 // Returns a fatal error in case there's any.
 func (cli *Cli) StartGoBin(sourcePath string, name string, keepAlive bool, args []string) {
-	err := cli.remoteClient.StartGoBin(sourcePath, name, keepAlive, args)
+	goBin := &apm.GoBin {
+		SourcePath: sourcePath,
+		Name: name,
+		KeepAlive: keepAlive,
+		Args_: args,
+	}
+	out, err := cli.remoteClient.Gobin(goBin)
 	if err != nil {
-		log.Fatalf("Failed to start go bin due to: %+v\n", err)
+		log.Printf("Failed to start go bin due to: %+v -> %s\n", err, out)
 	}
 }
 
 // RestartProcess will try to restart a process with procName. Note that this process
 // must have been already started through StartGoBin.
 func (cli *Cli) RestartProcess(procName string) {
-	err := cli.remoteClient.RestartProcess(procName)
+	err := cli.remoteClient.RestartProc(procName)
 	if err != nil {
-		log.Fatalf("Failed to restart process due to: %+v\n", err)
+		log.Printf("Failed to restart process due to: %+v\n", err)
 	}
 }
 
 // StartProcess will try to start a process with procName. Note that this process
 // must have been already started through StartGoBin.
 func (cli *Cli) StartProcess(procName string) {
-	err := cli.remoteClient.StartProcess(procName)
+	err := cli.remoteClient.StartProc(procName)
 	if err != nil {
-		log.Fatalf("Failed to start process due to: %+v\n", err)
+		log.Printf("Failed to start process due to: %+v\n", err)
 	}
 }
 
 // StopProcess will try to stop a process named procName.
 func (cli *Cli) StopProcess(procName string) {
-	err := cli.remoteClient.StopProcess(procName)
+	err := cli.remoteClient.StopProc(procName)
 	if err != nil {
-		log.Fatalf("Failed to stop process due to: %+v\n", err)
+		log.Printf("Failed to stop process due to: %+v\n", err)
 	}
 }
 
 // DeleteProcess will stop and delete all dependencies from process procName forever.
 func (cli *Cli) DeleteProcess(procName string) {
-	err := cli.remoteClient.DeleteProcess(procName)
+	err := cli.remoteClient.DeleteProc(procName)
 	if err != nil {
-		log.Fatalf("Failed to delete process due to: %+v\n", err)
+		log.Printf("Failed to delete process due to: %+v\n", err)
 	}
 }
 
 // Status will display the status of all procs started through StartGoBin.
 func (cli *Cli) Status() {
-	procs, err := cli.remoteClient.MonitStatus()
+	procs, err := cli.remoteClient.Monit()
 	if err != nil {
-		log.Fatalf("Failed to get status due to: %+v\n", err)
+		log.Printf("Failed to get status due to: %+v\n", err)
 	}
 	fmt.Printf("-----------------------------------------------------------------------------------\n")
 	fmt.Printf("|     pid     |             name             |     status     |     keep-alive     |\n")
