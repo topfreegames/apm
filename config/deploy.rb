@@ -36,6 +36,9 @@ set :new_goget, "#{fetch :new_go} get -u -f all || true && #{fetch :new_go} get"
 
 set :apm_config_path, "#{fetch :shared_path}/apm-config/config.toml"
 
+set :goget_hack, "git config --global url.\"git@git.topfreegames.com:\".insteadOf \"https\
+://git.topfreegames.com/\""
+
 namespace :deploy do
 
   desc 'Link repo'
@@ -46,7 +49,7 @@ namespace :deploy do
       execute "ln -snf #{fetch :release_path} #{fetch :gopath}/src/#{fetch :apm_go_repo}"      
       execute "#{fetch :new_goenv} bash -c \"rm -rf $GOPATH\""
       execute "#{fetch :new_goenv} bash -c \"mkdir -p $GOPATH/src/git.topfreegames.com/topfreegames\""
-      execute "#{fetch :new_goenv} cd $GOPATH/src/git.topfreegames.com/topfreegames && #{fetch :new_goenv} git clone git@git.topfreegames.com:topfreegames/aguia.git && cd aguia/lib && #{fetch :new_goget}"
+      execute "#{fetch :goget_hack} && #{fetch :new_goenv} cd $GOPATH/src/git.topfreegames.com/topfreegames && #{fetch :new_goenv} git clone git@git.topfreegames.com:topfreegames/aguia.git && cd aguia/lib && #{fetch :new_goget}"
     end    
   end
   desc 'Compile'
