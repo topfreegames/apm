@@ -2,6 +2,7 @@ package cli
 
 import "github.com/topfreegames/apm/lib/master"
 
+import "math"
 import "log"
 import "time"
 import "fmt"
@@ -89,8 +90,23 @@ func (cli *Cli) Status() {
 	if err != nil {
 		log.Fatalf("Failed to get status due to: %+v\n", err)
 	}
-	fmt.Printf("-----------------------------------------------------------------------------------\n")
-	fmt.Printf("|     pid     |             name             |     status     |     keep-alive     |\n")
+	maxName := 0
+	for id := range procs {
+		proc := procs[id]
+		maxName = int(math.Max(float64(maxName), float64(len(proc.Name))))
+	}
+	totalSize := maxName + 51;
+	topBar := ""
+	for i := 1; i <= totalSize; i += 1 {
+		topBar += "-"
+	}
+	infoBar := fmt.Sprintf("|%s|%s|%s|%s|",
+		PadString("pid", 13),
+		PadString("name", maxName + 2),
+		PadString("status", 16),
+		PadString("keep-alive", 15))
+	fmt.Println(topBar)
+	fmt.Println(infoBar)
 	for id := range procs {
 		proc := procs[id]
 		kp := "True"
@@ -99,11 +115,11 @@ func (cli *Cli) Status() {
 		}
 		fmt.Printf("|%s|%s|%s|%s|\n",
 			PadString(fmt.Sprintf("%d", proc.Pid), 13),
-			PadString(proc.Name, 30),
+			PadString(proc.Name, maxName + 2),
 			PadString(proc.Status.Status, 16),
-			PadString(kp, 20))
+			PadString(kp, 15))
 	}
-	fmt.Printf("-----------------------------------------------------------------------------------\n")
+	fmt.Println(topBar)
 }
 
 // PadString will add totalSize spaces evenly to the right and left side of str.
