@@ -44,21 +44,46 @@ type Master struct {
 	ErrFile   string           // ErrFile is the APM err log file path.
 	Watcher   *watcher.Watcher // Watcher is a watcher instance.
 
-	Procs map[string]*process.Proc // Procs is a map containing all procs started on APM.
+	Procs map[string]process.ProcContainer // Procs is a map containing all procs started on APM.
+}
+
+type DecodableMaster struct {
+	SysFolder string
+	PidFile string
+	OutFile string
+	ErrFile string
+
+	Watcher *watcher.Watcher
+
+	Procs map[string]*process.Proc
 }
 
 // InitMaster will start a master instance with configFile.
 // It returns a Master instance.
 func InitMaster(configFile string) *Master {
 	watcher := watcher.InitWatcher()
-	master := &Master{}
-	master.Procs = make(map[string]*process.Proc)
+	decodableMaster := &DecodableMaster{}
+	decodableMaster.Procs = make(map[string]*process.Proc)
 
-	err := utils.SafeReadTomlFile(configFile, master)
+	err := utils.SafeReadTomlFile(configFile, decodableMaster)
 	if err != nil {
 		panic(err)
 	}
-	
+
+	procs := make(map[string]process.ProcContainer)
+	for k, v := range decodableMaster.Procs {
+		procs[k] = v;
+	}
+	// We need this hack because toml decoder doesn't decode to interfaces
+	master := &Master {
+		SysFolder: decodableMaster.SysFolder,
+		PidFile: decodableMaster.PidFile,
+		OutFile: decodableMaster.OutFile,
+		ErrFile: decodableMaster.ErrFile,
+		Watcher: decodableMaster.Watcher,
+		Procs: procs,
+	}
+
 	if master.SysFolder == "" {
 		os.MkdirAll(path.Dir(configFile), 0777)
 		master.SysFolder = path.Dir(configFile) + "/"
@@ -75,31 +100,31 @@ func InitMaster(configFile string) *Master {
 // WatchProcs will keep the procs running forever.
 func (master *Master) WatchProcs() {
 	for proc := range master.Watcher.RestartProc() {
-		if !proc.KeepAlive {
+		if !proc.ShouldKeepAlive() {
 			master.Lock()
 			master.updateStatus(proc)
 			master.Unlock()
-			log.Infof("Proc %s does not have keep alive set. Will not be restarted.", proc.Name)
+			log.Infof("Proc %s does not have keep alive set. Will not be restarted.", proc.Identifier())
 			continue
 		}
-		log.Infof("Restarting proc %s.", proc.Name)
+		log.Infof("Restarting proc %s.", proc.Identifier())
 		if proc.IsAlive() {
-			log.Warnf("Proc %s was supposed to be dead, but it is alive.", proc.Name)
+			log.Warnf("Proc %s was supposed to be dead, but it is alive.", proc.Identifier())
 		}
 		master.Lock()
-		proc.Status.AddRestart()
+		proc.AddRestart()
 		err := master.restart(proc)
 		master.Unlock()
 		if err != nil {
-			log.Warnf("Could not restart process %s due to %s.", proc.Name, err)
+			log.Warnf("Could not restart process %s due to %s.", proc.Identifier(), err)
 		}
 	}
 }
 
 // Prepare will compile the source code into a binary and return a preparable
 // ready to be executed.
-func (master *Master) Prepare(sourcePath string, name string, language string, keepAlive bool, args []string) (*preparable.ProcPreparable, []byte, error) {
-	procPreparable := &preparable.ProcPreparable{
+func (master *Master) Prepare(sourcePath string, name string, language string, keepAlive bool, args []string) (preparable.ProcPreparable, []byte, error) {
+	procPreparable := &preparable.Preparable{
 		Name:       name,
 		SourcePath: sourcePath,
 		SysFolder:  master.SysFolder,
@@ -112,27 +137,27 @@ func (master *Master) Prepare(sourcePath string, name string, language string, k
 }
 
 // RunPreparable will run procPreparable and add it to the watch list in case everything goes well.
-func (master *Master) RunPreparable(procPreparable *preparable.ProcPreparable) error {
+func (master *Master) RunPreparable(procPreparable preparable.ProcPreparable) error {
 	master.Lock()
 	defer master.Unlock()
-	if _, ok := master.Procs[procPreparable.Name]; ok {
-		log.Warnf("Proc %s already exist.", procPreparable.Name)
+	if _, ok := master.Procs[procPreparable.Identifier()]; ok {
+		log.Warnf("Proc %s already exist.", procPreparable.Identifier())
 		return errors.New("Trying to start a process that already exist.")
 	}
 	proc, err := procPreparable.Start()
 	if err != nil {
 		return err
 	}
-	master.Procs[proc.Name] = proc
+	master.Procs[proc.Identifier()] = proc
 	master.saveProcsWrapper()
 	master.Watcher.AddProcWatcher(proc)
-	proc.Status.SetStatus("running")
+	proc.SetStatus("running")
 	return nil
 }
 
 // ListProcs will return a list of all procs.
-func (master *Master) ListProcs() []*process.Proc {
-	procsList := []*process.Proc{}
+func (master *Master) ListProcs() []process.ProcContainer {
+	procsList := []process.ProcContainer{}
 	for _, v := range master.Procs {
 		procsList = append(procsList, v)
 	}
@@ -197,50 +222,50 @@ func (master *Master) Revive() error {
 	log.Info("Reviving all processes")
 	for id := range procs {
 		proc := procs[id]
-		if !proc.KeepAlive {
-			log.Infof("Proc %s does not have KeepAlive set. Will not revive it.", proc.Name)
+		if !proc.ShouldKeepAlive() {
+			log.Infof("Proc %s does not have KeepAlive set. Will not revive it.", proc.Identifier())
 			continue
 		}
-		log.Infof("Reviving proc %s", proc.Name)
+		log.Infof("Reviving proc %s", proc.Identifier())
 		err := master.start(proc)
 		if err != nil {
-			return fmt.Errorf("Failed to revive proc %s due to %s", proc.Name, err)
+			return fmt.Errorf("Failed to revive proc %s due to %s", proc.Identifier(), err)
 		}
 	}
 	return nil
 }
 
 // NOT thread safe method. Lock should be acquire before calling it.
-func (master *Master) start(proc *process.Proc) error {
+func (master *Master) start(proc process.ProcContainer) error {
 	if !proc.IsAlive() {
 		err := proc.Start()
 		if err != nil {
 			return err
 		}
 		master.Watcher.AddProcWatcher(proc)
-		proc.Status.SetStatus("running")
+		proc.SetStatus("running")
 	}
 	return nil
 }
 
-func (master *Master) delete(proc *process.Proc) error {
+func (master *Master) delete(proc process.ProcContainer) error {
 	return proc.Delete()
 }
 
 // NOT thread safe method. Lock should be acquire before calling it.
-func (master *Master) stop(proc *process.Proc) error {
+func (master *Master) stop(proc process.ProcContainer) error {
 	if proc.IsAlive() {
-		waitStop := master.Watcher.StopWatcher(proc.Name)
+		waitStop := master.Watcher.StopWatcher(proc.Identifier())
 		err := proc.GracefullyStop()
 		if err != nil {
 			return err
 		}
 		if waitStop != nil {
 			<-waitStop
-			proc.Pid = -1
-			proc.Status.SetStatus("stopped")
+			proc.NotifyStopped()
+			proc.SetStatus("stopped")
 		}
-		log.Infof("Proc %s successfully stopped.", proc.Name)
+		log.Infof("Proc %s successfully stopped.", proc.Identifier())
 	}
 	return nil
 }
@@ -259,17 +284,17 @@ func (master *Master) UpdateStatus() {
 	}
 }
 
-func (master *Master) updateStatus(proc *process.Proc) {
+func (master *Master) updateStatus(proc process.ProcContainer) {
 	if proc.IsAlive() {
-		proc.Status.SetStatus("running")
+		proc.SetStatus("running")
 	} else {
-		proc.Pid = -1
-		proc.Status.SetStatus("stopped")
+		proc.NotifyStopped()
+		proc.SetStatus("stopped")
 	}
 }
 
 // NOT thread safe method. Lock should be acquire before calling it.
-func (master *Master) restart(proc *process.Proc) error {
+func (master *Master) restart(proc process.ProcContainer) error {
 	err := master.stop(proc)
 	if err != nil {
 		return err
@@ -294,7 +319,7 @@ func (master *Master) Stop() error {
 	procs := master.ListProcs()
 	for id := range procs {
 		proc := procs[id]
-		log.Info("Stopping proc %s", proc.Name)
+		log.Info("Stopping proc %s", proc.Identifier())
 		master.stop(proc)
 	}
 	log.Info("Saving and returning list of procs.")

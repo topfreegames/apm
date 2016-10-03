@@ -26,6 +26,16 @@ type GoBin struct {
 	Args       []string // Args is an array containing all the extra args that will be passed to the binary after compilation.
 }
 
+type ProcDataResponse struct {
+	Name string
+	Pid int
+	Status *process.ProcStatus
+	KeepAlive bool
+}
+
+type ProcResponse struct {
+	Procs []*ProcDataResponse
+}
 // Save will save the current running and stopped processes onto a file.
 // Returns an error in case there's any.
 func (remote_master *RemoteMaster) Save(req string, ack *bool) error {
@@ -77,9 +87,23 @@ func (remote_master *RemoteMaster) StopProcess(procName string, ack *bool) error
 
 // MonitStatus will query for the status of each process and bind it to procs pointer list.
 // It returns an error in case there's any.
-func (remote_master *RemoteMaster) MonitStatus(req string, procs *[]*process.Proc) error {
+func (remote_master *RemoteMaster) MonitStatus(req string, response *ProcResponse) error {
 	req = ""
-	*procs = remote_master.master.ListProcs()
+	procs := remote_master.master.ListProcs()
+	procsResponse := []*ProcDataResponse{}
+	for id := range procs {
+		proc := procs[id]
+		procData := &ProcDataResponse {
+			Name: proc.Identifier(),
+			Pid: proc.GetPid(),
+			Status: proc.GetStatus(),
+			KeepAlive: proc.ShouldKeepAlive(),
+		}
+		procsResponse = append(procsResponse, procData)
+	}
+	*response = ProcResponse {
+		Procs: procsResponse,
+	}
 	return nil
 }
 
@@ -180,8 +204,8 @@ func (client *RemoteClient) DeleteProcess(procName string) error {
 
 // MonitStatus is a wrapper that calls the remote MonitStatus.
 // It returns a tuple with a list of process and an error in case there's any.
-func (client *RemoteClient) MonitStatus() ([]*process.Proc, error) {
-	var procs []*process.Proc
-	err := client.conn.Call("RemoteMaster.MonitStatus", "", &procs)
-	return procs, err
+func (client *RemoteClient) MonitStatus() (ProcResponse, error) {
+	var response *ProcResponse
+	err := client.conn.Call("RemoteMaster.MonitStatus", "", &response)
+	return *response, err
 }

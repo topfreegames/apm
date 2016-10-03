@@ -7,6 +7,24 @@ import "strconv"
 
 import "github.com/topfreegames/apm/lib/utils"
 
+type ProcContainer interface {
+	Start() error
+	ForceStop() error
+	GracefullyStop() error
+	Restart() error
+	Delete() error
+	IsAlive() bool
+	Identifier() string
+	ShouldKeepAlive() bool
+	AddRestart()
+	NotifyStopped()
+	SetStatus(status string)
+	GetPid() int
+	GetStatus() *ProcStatus
+	Watch() (*os.ProcessState, error)
+	release()
+}
+
 // Proc is a os.Process wrapper with Status and more info that will be used on Master to maintain
 // the process health.
 type Proc struct {
@@ -135,4 +153,39 @@ func (proc *Proc) release() {
 		proc.process.Release()
 	}
 	utils.DeleteFile(proc.Pidfile)
+}
+
+// Notify that process was stopped so we can set its PID to -1
+func (proc *Proc) NotifyStopped() {
+	proc.Pid = -1;
+}
+
+// Add one restart to proc status
+func (proc *Proc) AddRestart() {
+	proc.Status.AddRestart()
+}
+
+// Return proc current PID
+func (proc *Proc) GetPid() int {
+	return proc.Pid;
+}
+
+// Return proc current status
+func (proc *Proc) GetStatus() *ProcStatus {
+	return proc.Status;
+}
+
+// Set proc status
+func (proc *Proc) SetStatus(status string) {
+	proc.Status.SetStatus(status);
+}
+
+// Proc identifier that will be used by watcher to keep track of its processes
+func (proc *Proc) Identifier() string {
+	return proc.Name;
+}
+
+// Returns true if the process should be kept alive or not
+func (proc *Proc) ShouldKeepAlive() bool {
+	return proc.KeepAlive;
 }
