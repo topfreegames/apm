@@ -47,6 +47,9 @@ type Master struct {
 	Procs map[string]process.ProcContainer // Procs is a map containing all procs started on APM.
 }
 
+// DecodableMaster is a struct that the config toml file will decode to.
+// It is needed because toml decoder doesn't decode to interfaces, so the
+// Procs map can't be decoded as long as we use the ProcContainer interface
 type DecodableMaster struct {
 	SysFolder string
 	PidFile string
