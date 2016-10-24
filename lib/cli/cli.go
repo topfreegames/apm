@@ -86,13 +86,13 @@ func (cli *Cli) DeleteProcess(procName string) {
 
 // Status will display the status of all procs started through StartGoBin.
 func (cli *Cli) Status() {
-	procs, err := cli.remoteClient.MonitStatus()
+	procResponse, err := cli.remoteClient.MonitStatus()
 	if err != nil {
 		log.Fatalf("Failed to get status due to: %+v\n", err)
 	}
 	maxName := 0
-	for id := range procs {
-		proc := procs[id]
+	for id := range procResponse.Procs {
+		proc := procResponse.Procs[id]
 		maxName = int(math.Max(float64(maxName), float64(len(proc.Name))))
 	}
 	totalSize := maxName + 51;
@@ -107,8 +107,8 @@ func (cli *Cli) Status() {
 		PadString("keep-alive", 15))
 	fmt.Println(topBar)
 	fmt.Println(infoBar)
-	for id := range procs {
-		proc := procs[id]
+	for id := range procResponse.Procs {
+		proc := procResponse.Procs[id]
 		kp := "True"
 		if !proc.KeepAlive {
 			kp = "False"

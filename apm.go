@@ -50,16 +50,16 @@ var (
 	serveConfigFile = serve.Flag("config-file", "Config file location").String()
 
 	resurrect     = app.Command("resurrect", "Resurrect all previously save processes.")
-	
+
 	bin           = app.Command("bin", "Create bin process.")
 	binSourcePath = bin.Flag("source", "Go project source path. (Ex: github.com/topfreegames/apm)").Required().String()
 	binName       = bin.Arg("name", "Process name.").Required().String()
 	binKeepAlive  = bin.Flag("keep-alive", "Keep process alive forever.").Required().Bool()
 	binArgs       = bin.Flag("args", "External args.").Strings()
-	
+
 	restart     = app.Command("restart", "Restart a process.")
 	restartName = restart.Arg("name", "Process name.").Required().String()
-	
+
 	start     = app.Command("start", "Start a process.")
 	startName = start.Arg("name", "Process name.").Required().String()
 
@@ -70,7 +70,7 @@ var (
 	deleteName = delete.Arg("name", "Process name.").Required().String()
 
 	save = app.Command("save", "Save a list of processes onto a file.")
-	
+
 	status = app.Command("status", "Get APM status.")
 )
 
