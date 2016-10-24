@@ -7,7 +7,7 @@
      <br/><br/>
 </div>
 # APM - Aguia Process Manager
-APM is a lightweight process manager written in Golang for Golang applications. It helps you keep your applications alive forever, to reload and start them from the source code.
+APM is a lightweight process manager written in Golang for Golang applications. It helps you keep your applications alive forever, reload and start them from the source code.
 
 [![ReportCard](http://goreportcard.com/badge/topfreegames/apm)](http://goreportcard.com/badge/topfreegames/apm)
 [![GoDoc](https://godoc.org/github.com/topfreegames/apm?status.svg)](https://godoc.org/github.com/topfreegames/apm)
@@ -17,7 +17,14 @@ Starting an application is easy:
 $ ./apm bin app-name --source="github.com/topfreegames/apm"
 ```
 
-This will basically compile your project source code and start it as a daemon in the background.
+This will basically compile your project source code and start it as a
+daemon in the background. The application will have already be
+downloaded into `GOPATH` issuing something like
+
+	go get github.com/topfreegames/apm
+
+You will probably be able to run anything in any directory, as long as
+it is under `GOPATH`
 
 ## Install APM
 
@@ -30,7 +37,7 @@ $ go get github.com/topfreegames/apm
 ```bash
 $ apm serve
 ```
-If not config file is provided, it will default to a folder '.apmenv' where apm is first started.
+If no config file is provided, it will default to a folder '.apmenv' where `apm` is first started.
 
 ## Stop APM
 
@@ -56,6 +63,7 @@ $ apm save                                                  # Save current proce
 $ apm resurrect                                             # Restore previously saved processes
 
 $ apm status                                                # Display status for each app.
+```
 
 ### Managing process via HTTP
 
