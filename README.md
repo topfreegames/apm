@@ -34,6 +34,7 @@ $ go get github.com/topfreegames/apm
 
 ## Start APM
 
+In order to properly use APM, you always need to start a server. This will be changed in the next version, but in the meantime you need to run the command bellow to start using APM.
 ```bash
 $ apm serve
 ```
@@ -43,6 +44,19 @@ If no config file is provided, it will default to a folder '.apmenv' where `apm`
 
 ```bash
 $ apm serve-stop
+```
+
+## Starting a new application
+If it's the first time you are starting a new golang application, you need to tell APM to first build its binary. Then you need to first run:
+```bash
+$ apm bin app-name --source="github.com/yourproject/project"
+```
+
+This will automatically compile, start and daemonize your application. If you need to later on, stop, restart or delete your app from APM, you can just run normal commands using the app-name you specified. Example:
+```bash
+$ apm stop app-name
+$ apm restart app-name
+$ apm delete app-name
 ```
 
 ## Main features
